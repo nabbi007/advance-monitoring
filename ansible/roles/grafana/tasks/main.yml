@@ -1,0 +1,103 @@
+---
+# tasks/main.yml — Grafana installation and configuration
+#
+# Installs Grafana OSS from the official APT repository,
+# configures provisioning for datasources and dashboards,
+# and ensures the service is running with a health check.
+
+- name: Install prerequisite packages
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https
+      - software-properties-common
+      - gnupg2
+    state: present
+    update_cache: true
+
+- name: Add Grafana GPG key
+  ansible.builtin.apt_key:
+    url: https://apt.grafana.com/gpg.key
+    state: present
+  retries: 3
+  delay: 5
+
+- name: Add Grafana APT repository
+  ansible.builtin.apt_repository:
+    repo: "deb https://apt.grafana.com stable main"
+    state: present
+    filename: grafana
+
+- name: Install Grafana OSS
+  ansible.builtin.apt:
+    name: "grafana={{ grafana_version }}"
+    state: present
+    update_cache: true
+  retries: 3
+  delay: 10
+  notify:
+    - Reload systemd
+    - Restart grafana
+
+- name: Deploy grafana.ini configuration
+  ansible.builtin.template:
+    src: grafana.ini.j2
+    dest: /etc/grafana/grafana.ini
+    owner: grafana
+    group: grafana
+    mode: "0640"
+  notify: Restart grafana
+
+- name: Ensure provisioning directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: grafana
+    group: grafana
+    mode: "0755"
+  loop:
+    - "{{ grafana_provisioning_path }}"
+    - "{{ grafana_datasources_dir }}"
+    - "{{ grafana_dashboards_dir }}"
+
+- name: Deploy datasources provisioning
+  ansible.builtin.template:
+    src: datasources.yml.j2
+    dest: "{{ grafana_datasources_dir }}/datasources.yml"
+    owner: grafana
+    group: grafana
+    mode: "0644"
+  notify: Restart grafana
+
+- name: Deploy dashboards provisioning config
+  ansible.builtin.template:
+    src: dashboards.yml.j2
+    dest: "{{ grafana_dashboards_dir }}/dashboards.yml"
+    owner: grafana
+    group: grafana
+    mode: "0644"
+  notify: Restart grafana
+
+- name: Copy voting app dashboard JSON
+  ansible.builtin.copy:
+    src: voting-app-dashboard.json
+    dest: "{{ grafana_dashboards_dir }}/voting-app-dashboard.json"
+    owner: grafana
+    group: grafana
+    mode: "0644"
+  notify: Restart grafana
+
+- name: Enable and start Grafana service
+  ansible.builtin.systemd:
+    name: grafana-server
+    state: started
+    enabled: true
+
+- name: Wait for Grafana to be ready
+  ansible.builtin.uri:
+    url: "http://localhost:{{ grafana_listen_port }}/api/health"
+    method: GET
+    status_code: 200
+  register: _grafana_health
+  until: _grafana_health.status == 200
+  retries: 30
+  delay: 5

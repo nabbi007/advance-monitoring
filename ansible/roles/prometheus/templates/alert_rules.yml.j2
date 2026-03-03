@@ -1,0 +1,123 @@
+###############################################################################
+# alert_rules.yml — Prometheus Alert Rules (Ansible Managed)
+#
+# Covers:
+#   • Error rate >5% for 5 minutes
+#   • P95 latency >300ms for 10 minutes
+#   • Backend / Frontend down
+#   • Redis down
+#   • High CPU / Memory usage
+###############################################################################
+{% raw %}
+groups:
+  - name: voting_app_alerts
+    rules:
+      # -----------------------------------------------------------------
+      #  High Error Rate — error rate exceeds 5% over 5 minutes
+      # -----------------------------------------------------------------
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum(rate(http_errors_total[5m])) by (service)
+            /
+            sum(rate(http_requests_total[5m])) by (service)
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate on {{ $labels.service }}"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 5%) for the last 5 minutes."
+          runbook: "Check Jaeger traces for failing spans and correlate with structured logs using trace_id."
+
+      # -----------------------------------------------------------------
+      #  High Latency — P95 response time exceeds 300ms for 10 minutes
+      # -----------------------------------------------------------------
+      - alert: HighLatencyP95
+        expr: |
+          histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service))
+          > 0.3
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High P95 latency on {{ $labels.service }}"
+          description: "P95 latency is {{ $value | humanizeDuration }} (threshold: 300ms) sustained for 10 minutes."
+          runbook: "Investigate slow Jaeger traces; check Redis operation durations."
+
+      # -----------------------------------------------------------------
+      #  Backend Down
+      # -----------------------------------------------------------------
+      - alert: BackendDown
+        expr: up{job="voting-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Voting backend is DOWN"
+          description: "The voting-backend target has been unreachable for over 1 minute."
+
+      # -----------------------------------------------------------------
+      #  Frontend Down
+      # -----------------------------------------------------------------
+      - alert: FrontendDown
+        expr: up{job="voting-frontend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Voting frontend is DOWN"
+          description: "The voting-frontend target has been unreachable for over 1 minute."
+
+      # -----------------------------------------------------------------
+      #  Redis Down
+      # -----------------------------------------------------------------
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis exporter is DOWN"
+          description: "Redis exporter target has been unreachable for over 1 minute."
+
+      # -----------------------------------------------------------------
+      #  High Redis Memory Usage (>80%)
+      # -----------------------------------------------------------------
+      - alert: RedisHighMemory
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis memory usage above 80%"
+          description: "Redis is using {{ $value | humanizePercentage }} of max memory."
+
+      # -----------------------------------------------------------------
+      #  High CPU Usage (>80% for 5 minutes)
+      # -----------------------------------------------------------------
+      - alert: HighCPUUsage
+        expr: |
+          100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+          > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is above 80% for the last 5 minutes."
+
+      # -----------------------------------------------------------------
+      #  High Memory Usage (>85% for 5 minutes)
+      # -----------------------------------------------------------------
+      - alert: HighMemoryUsage
+        expr: |
+          (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100
+          > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is above 85% for the last 5 minutes."
+{% endraw %}

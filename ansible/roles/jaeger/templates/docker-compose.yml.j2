@@ -1,0 +1,31 @@
+###############################################################################
+# docker-compose.yml — Jaeger All-in-One (Ansible Managed)
+###############################################################################
+
+services:
+  jaeger:
+    image: {{ jaeger_image }}:{{ jaeger_version }}
+    container_name: jaeger
+    restart: unless-stopped
+    ports:
+      - "{{ jaeger_ui_port }}:16686"
+      - "{{ jaeger_otlp_grpc_port }}:4317"
+      - "{{ jaeger_otlp_http_port }}:4318"
+      - "{{ jaeger_thrift_port }}:14268"
+      - "{{ jaeger_grpc_port }}:14250"
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+      SPAN_STORAGE_TYPE: "{{ jaeger_storage_type }}"
+      MEMORY_MAX_TRACES: "{{ jaeger_max_traces }}"
+    networks:
+      - monitoring-net
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:16686/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+networks:
+  monitoring-net:
+    driver: bridge

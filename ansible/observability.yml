@@ -1,0 +1,54 @@
+---
+###############################################################################
+# observability.yml — Observability Instance Playbook
+#
+# Deploys:
+#   - Common system setup (packages, NTP, sysctl)
+#   - Node Exporter (host metrics for self-monitoring)
+#   - Prometheus (metrics collection, alerting)
+#   - Grafana (dashboards, visualization)
+#   - Jaeger (distributed tracing via Docker)
+###############################################################################
+
+- name: Configure Observability Instance
+  hosts: observability
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+    - name: Validate required variables
+      ansible.builtin.assert:
+        that:
+          - app_private_ip is defined
+          - app_private_ip | length > 0
+        fail_msg: "app_private_ip must be set (Terraform output or inventory var)"
+        quiet: true
+
+  roles:
+    - role: common
+      tags: [common, base]
+
+    - role: node_exporter
+      tags: [node_exporter, exporters, monitoring]
+
+    - role: prometheus
+      tags: [prometheus, monitoring]
+
+    - role: grafana
+      tags: [grafana, monitoring]
+
+    - role: jaeger
+      tags: [jaeger, tracing]
+
+  post_tasks:
+    - name: Observability instance deployment summary
+      ansible.builtin.debug:
+        msg:
+          - "==========================================="
+          - "  Observability Instance Deployment Complete"
+          - "==========================================="
+          - "Prometheus:     http://{{ ansible_host }}:{{ prometheus_listen_port | default(9090) }}"
+          - "Grafana:        http://{{ ansible_host }}:{{ grafana_listen_port | default(3000) }}"
+          - "Jaeger UI:      http://{{ ansible_host }}:{{ jaeger_ui_port | default(16686) }}"
+          - "Node Exporter:  http://{{ ansible_host }}:{{ node_exporter_port | default(9100) }}/metrics"
+          - "==========================================="

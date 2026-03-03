@@ -1,0 +1,20 @@
+[Unit]
+Description=Prometheus Redis Exporter
+Documentation=https://github.com/oliver006/redis_exporter
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=redis_exporter
+Group=redis_exporter
+Type=simple
+Environment=REDIS_ADDR={{ redis_exporter_redis_addr }}
+ExecStart=/usr/local/bin/redis_exporter \
+  --web.listen-address=:{{ redis_exporter_listen_port }} \
+  --redis.addr={{ redis_exporter_redis_addr }}
+Restart=on-failure
+RestartSec=10s
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=multi-user.target

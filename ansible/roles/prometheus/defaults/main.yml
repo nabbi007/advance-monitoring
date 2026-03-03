@@ -1,0 +1,6 @@
+---
+prometheus_version: "2.51.2"
+prometheus_listen_port: 9090
+prometheus_retention: "15d"
+prometheus_scrape_interval: "15s"
+prometheus_evaluation_interval: "15s"

@@ -1,0 +1,7 @@
+---
+# handlers/main.yml — App Docker handlers
+
+- name: Restart voting app
+  community.docker.docker_compose_v2:
+    project_src: "{{ app_project_dir }}"
+    state: restarted

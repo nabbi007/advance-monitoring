@@ -1,0 +1,48 @@
+---
+# tasks/main.yml — Jaeger distributed tracing deployment
+#
+# Deploys Jaeger all-in-one via Docker Compose on the
+# observability instance. Docker is already installed
+# by the common role.
+
+- name: Create Jaeger project directory
+  ansible.builtin.file:
+    path: /opt/jaeger
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Deploy Jaeger docker-compose file
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: /opt/jaeger/docker-compose.yml
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart jaeger
+
+- name: Pull Jaeger image
+  community.docker.docker_image:
+    name: "{{ jaeger_image }}:{{ jaeger_version }}"
+    source: pull
+    force_source: true
+  retries: 3
+  delay: 10
+
+- name: Start Jaeger with Docker Compose
+  community.docker.docker_compose_v2:
+    project_src: /opt/jaeger
+    state: present
+    pull: missing
+  register: _jaeger_compose
+
+- name: Wait for Jaeger UI to be ready
+  ansible.builtin.uri:
+    url: "http://localhost:{{ jaeger_ui_port }}/"
+    method: GET
+    status_code: 200
+  register: _jaeger_health
+  until: _jaeger_health.status == 200
+  retries: 30
+  delay: 5

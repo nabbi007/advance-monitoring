@@ -1,0 +1,50 @@
+---
+###############################################################################
+# app.yml — App Instance Playbook
+#
+# Deploys:
+#   - Common system setup (packages, NTP, sysctl)
+#   - Voting app stack (Redis, Backend, Frontend via Docker Compose)
+#   - Node Exporter (host metrics for Prometheus)
+#   - Redis Exporter (Redis metrics for Prometheus)
+###############################################################################
+
+- name: Configure App Instance
+  hosts: app
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+    - name: Validate required variables
+      ansible.builtin.assert:
+        that:
+          - observability_private_ip is defined
+          - observability_private_ip | length > 0
+        fail_msg: "observability_private_ip must be set (Terraform output or inventory var)"
+        quiet: true
+
+  roles:
+    - role: common
+      tags: [common, base]
+
+    - role: app_docker
+      tags: [app, docker]
+
+    - role: node_exporter
+      tags: [node_exporter, exporters, monitoring]
+
+    - role: redis_exporter
+      tags: [redis_exporter, exporters, monitoring]
+
+  post_tasks:
+    - name: App instance deployment summary
+      ansible.builtin.debug:
+        msg:
+          - "==========================================="
+          - "  App Instance Deployment Complete"
+          - "==========================================="
+          - "Frontend:       http://{{ ansible_host }}:{{ app_frontend_port | default(3000) }}"
+          - "Backend:        http://{{ ansible_host }}:{{ app_backend_port | default(3001) }}"
+          - "Node Exporter:  http://{{ ansible_host }}:{{ node_exporter_port | default(9100) }}/metrics"
+          - "Redis Exporter: http://{{ ansible_host }}:{{ redis_exporter_port | default(9121) }}/metrics"
+          - "==========================================="

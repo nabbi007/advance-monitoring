@@ -1,0 +1,13 @@
+apiVersion: 1
+
+providers:
+  - name: "Default"
+    orgId: 1
+    folder: "Voting App"
+    type: file
+    disableDeletion: false
+    editable: true
+    allowUiUpdates: true
+    options:
+      path: {{ grafana_dashboards_dir }}
+      foldersFromFilesStructure: false

@@ -1,0 +1,19 @@
+---
+###############################################################################
+# site.yml — Master Playbook (Ansible Managed)
+#
+# Orchestrates full-stack deployment:
+#   1. App instance:          common → app_docker → node_exporter → redis_exporter
+#   2. Observability instance: common → node_exporter → prometheus → grafana → jaeger
+#
+# Usage:
+#   ansible-playbook -i inventory/hosts.ini site.yml
+#   ansible-playbook -i inventory/hosts.ini site.yml --limit app
+#   ansible-playbook -i inventory/hosts.ini site.yml --limit observability
+###############################################################################
+
+- name: Deploy App Instance
+  import_playbook: app.yml
+
+- name: Deploy Observability Instance
+  import_playbook: observability.yml

@@ -1,0 +1,4 @@
+---
+redis_exporter_version: "1.62.0"
+redis_exporter_listen_port: 9121
+redis_exporter_redis_addr: "redis://localhost:6379"

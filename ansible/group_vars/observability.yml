@@ -1,0 +1,26 @@
+###############################################################################
+# group_vars/observability.yml — Variables for the Observability instance
+###############################################################################
+
+# Prometheus
+prometheus_version: "2.51.2"
+prometheus_listen_port: 9090
+prometheus_retention: "15d"
+prometheus_scrape_interval: "15s"
+prometheus_evaluation_interval: "15s"
+
+# Grafana
+grafana_admin_user: admin
+grafana_admin_password: "admin123"  # Override via --extra-vars or vault
+grafana_listen_port: 3000
+grafana_allow_signup: false
+
+# Jaeger
+jaeger_image: "jaegertracing/all-in-one:latest"
+jaeger_ui_port: 16686
+jaeger_otlp_grpc_port: 4317
+jaeger_otlp_http_port: 4318
+jaeger_max_traces: 50000
+
+# Monitoring project dir (for Jaeger Docker Compose)
+monitoring_project_dir: /opt/monitoring

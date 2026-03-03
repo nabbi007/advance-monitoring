@@ -1,0 +1,62 @@
+###############################################################################
+# prometheus.yml — Prometheus Configuration
+#
+# Scrapes remote app-instance targets using the APP_HOST env variable,
+# which is injected into the config at deploy time by the setup script.
+###############################################################################
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+
+rule_files:
+  - "alert_rules.yml"
+
+scrape_configs:
+  # -------------------------------------------------------------------
+  #  Prometheus self-monitoring
+  # -------------------------------------------------------------------
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # -------------------------------------------------------------------
+  #  Voting Backend — RED metrics + custom metrics  (:3001/metrics)
+  # -------------------------------------------------------------------
+  - job_name: "voting-backend"
+    static_configs:
+      - targets: ["APP_HOST_PLACEHOLDER:3001"]
+        labels:
+          service: "voting-backend"
+          environment: "production"
+
+  # -------------------------------------------------------------------
+  #  Voting Frontend — RED metrics  (:3000/metrics)
+  # -------------------------------------------------------------------
+  - job_name: "voting-frontend"
+    static_configs:
+      - targets: ["APP_HOST_PLACEHOLDER:3000"]
+        labels:
+          service: "voting-frontend"
+          environment: "production"
+
+  # -------------------------------------------------------------------
+  #  Redis Exporter  (:9121/metrics)
+  # -------------------------------------------------------------------
+  - job_name: "redis"
+    static_configs:
+      - targets: ["APP_HOST_PLACEHOLDER:9121"]
+        labels:
+          service: "redis"
+          environment: "production"
+
+  # -------------------------------------------------------------------
+  #  Node Exporter — host-level metrics  (:9100/metrics)
+  # -------------------------------------------------------------------
+  - job_name: "node-exporter"
+    static_configs:
+      - targets: ["APP_HOST_PLACEHOLDER:9100"]
+        labels:
+          service: "node-exporter"
+          instance_role: "app"

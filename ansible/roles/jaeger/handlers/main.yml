@@ -1,0 +1,7 @@
+---
+# handlers/main.yml — Jaeger handlers
+
+- name: Restart jaeger
+  community.docker.docker_compose_v2:
+    project_src: /opt/jaeger
+    state: restarted

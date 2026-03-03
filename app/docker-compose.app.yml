@@ -1,0 +1,98 @@
+###############################################################################
+# docker-compose.app.yml — Voting App Stack (Instance 1)
+#
+#  Services: frontend, backend, redis
+#
+#  NOTE: node-exporter and redis-exporter are NOT run here.
+#  They are installed as native systemd services on the host via Ansible
+#  roles (ansible/roles/node_exporter, ansible/roles/redis_exporter) so that
+#  node-exporter can access real host metrics (/proc, /sys) without
+#  the --path.rootfs workaround, and redis-exporter gains a simpler
+#  host-level lifecycle.  Prometheus scrapes them on :9100 and :9121.
+###############################################################################
+
+version: "3.9"
+
+services:
+  # -----------------------------------------------------------------------
+  #  Redis — in-memory data store for votes
+  # -----------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - voting-net
+
+  # -----------------------------------------------------------------------
+  #  Backend API — Node.js/Express with OpenTelemetry + Prometheus metrics
+  # -----------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: voting-backend:latest
+    container_name: voting-backend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: "3001"
+      REDIS_URL: "redis://redis:6379"
+      VOTE_OPTIONS: "cats,dogs"
+      OTEL_SERVICE_NAME: "voting-backend"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://${MONITORING_HOST:-monitoring}:4318/v1/traces"
+      NODE_ENV: "production"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    networks:
+      - voting-net
+
+  # -----------------------------------------------------------------------
+  #  Frontend — Node.js/Express serving UI + proxying API to backend
+  # -----------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: voting-frontend:latest
+    container_name: voting-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: "3000"
+      BACKEND_URL: "http://backend:3001"
+      OTEL_SERVICE_NAME: "voting-frontend"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://${MONITORING_HOST:-monitoring}:4318/v1/traces"
+      NODE_ENV: "production"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - voting-net
+
+# node-exporter  → installed as a systemd service (see ansible/roles/node_exporter)
+# redis-exporter → installed as a systemd service (see ansible/roles/redis_exporter)
+
+volumes:
+  redis_data:
+
+networks:
+  voting-net:
+    driver: bridge

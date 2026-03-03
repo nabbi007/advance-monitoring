@@ -1,0 +1,69 @@
+###############################################################################
+# docker-compose.yml — Voting App Stack (Ansible Managed)
+###############################################################################
+
+services:
+  redis:
+    image: {{ app_redis_image }}
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "{{ app_redis_port }}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - voting-net
+
+  backend:
+    image: {{ app_backend_image }}
+    container_name: voting-backend
+    restart: unless-stopped
+    ports:
+      - "{{ app_backend_port }}:3001"
+    environment:
+      PORT: "3001"
+      REDIS_URL: "redis://redis:6379"
+      VOTE_OPTIONS: "{{ app_vote_options }}"
+      OTEL_SERVICE_NAME: "voting-backend"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://{{ observability_private_ip }}:4318/v1/traces"
+      NODE_ENV: "{{ app_node_env }}"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    networks:
+      - voting-net
+
+  frontend:
+    image: {{ app_frontend_image }}
+    container_name: voting-frontend
+    restart: unless-stopped
+    ports:
+      - "{{ app_frontend_port }}:3000"
+    environment:
+      PORT: "3000"
+      BACKEND_URL: "http://backend:3001"
+      OTEL_SERVICE_NAME: "voting-frontend"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://{{ observability_private_ip }}:4318/v1/traces"
+      NODE_ENV: "{{ app_node_env }}"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - voting-net
+
+volumes:
+  redis_data:
+
+networks:
+  voting-net:
+    driver: bridge

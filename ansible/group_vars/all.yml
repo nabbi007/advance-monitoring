@@ -1,0 +1,27 @@
+###############################################################################
+# group_vars/all.yml — Variables shared across ALL hosts
+###############################################################################
+
+# Project metadata
+project_name: advance-monitoring
+
+# SSH / connection
+ansible_user: ubuntu
+ansible_python_interpreter: /usr/bin/python3
+
+# Common package list installed on every host
+common_packages:
+  - curl
+  - wget
+  - jq
+  - unzip
+  - htop
+  - net-tools
+  - ca-certificates
+  - gnupg
+  - lsb-release
+  - apt-transport-https
+  - software-properties-common
+
+# NTP — keep clocks in sync for trace correlation
+ntp_enabled: true

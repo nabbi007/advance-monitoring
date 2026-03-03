@@ -1,0 +1,62 @@
+---
+###############################################################################
+# roles/common/tasks/main.yml — Base system hardening & package installation
+###############################################################################
+
+- name: Wait for cloud-init to complete
+  ansible.builtin.command: cloud-init status --wait
+  changed_when: false
+  timeout: 300
+  register: cloud_init_result
+  failed_when: cloud_init_result.rc != 0
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  retries: 3
+  delay: 10
+
+- name: Install common packages
+  ansible.builtin.apt:
+    name: "{{ common_packages }}"
+    state: present
+  retries: 3
+  delay: 5
+
+- name: Install chrony for NTP time sync
+  ansible.builtin.apt:
+    name: chrony
+    state: present
+  when: ntp_enabled | default(true)
+
+- name: Enable and start chrony
+  ansible.builtin.systemd:
+    name: chrony
+    enabled: true
+    state: started
+  when: ntp_enabled | default(true)
+
+- name: Set timezone to UTC
+  ansible.builtin.timezone:
+    name: UTC
+
+- name: Configure sysctl for production workloads
+  ansible.posix.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    sysctl_set: true
+    reload: true
+  loop:
+    - { key: "net.core.somaxconn", value: "65535" }
+    - { key: "vm.overcommit_memory", value: "1" }
+    - { key: "net.ipv4.tcp_max_syn_backlog", value: "65535" }
+  ignore_errors: true
+
+- name: Ensure log directory exists
+  ansible.builtin.file:
+    path: /var/log/{{ project_name }}
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"

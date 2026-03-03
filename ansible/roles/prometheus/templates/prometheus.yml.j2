@@ -1,0 +1,72 @@
+###############################################################################
+# prometheus.yml — Prometheus Configuration (Ansible Managed)
+#
+# Scrapes app-instance targets using the app_private_ip variable
+# injected by Ansible from Terraform outputs.
+###############################################################################
+
+global:
+  scrape_interval: {{ prometheus_scrape_interval }}
+  evaluation_interval: {{ prometheus_evaluation_interval }}
+  scrape_timeout: 10s
+
+rule_files:
+  - "alert_rules.yml"
+
+scrape_configs:
+  # -------------------------------------------------------------------
+  #  Prometheus self-monitoring
+  # -------------------------------------------------------------------
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:{{ prometheus_listen_port }}"]
+
+  # -------------------------------------------------------------------
+  #  Voting Backend — RED metrics + custom metrics  (:3001/metrics)
+  # -------------------------------------------------------------------
+  - job_name: "voting-backend"
+    static_configs:
+      - targets: ["{{ app_private_ip }}:{{ backend_port | default(3001) }}"]
+        labels:
+          service: "voting-backend"
+          environment: "production"
+
+  # -------------------------------------------------------------------
+  #  Voting Frontend — RED metrics  (:3000/metrics)
+  # -------------------------------------------------------------------
+  - job_name: "voting-frontend"
+    static_configs:
+      - targets: ["{{ app_private_ip }}:{{ frontend_port | default(3000) }}"]
+        labels:
+          service: "voting-frontend"
+          environment: "production"
+
+  # -------------------------------------------------------------------
+  #  Redis Exporter  (:9121/metrics)
+  # -------------------------------------------------------------------
+  - job_name: "redis"
+    static_configs:
+      - targets: ["{{ app_private_ip }}:{{ redis_exporter_port | default(9121) }}"]
+        labels:
+          service: "redis"
+          environment: "production"
+
+  # -------------------------------------------------------------------
+  #  Node Exporter — app instance  (:9100/metrics)
+  # -------------------------------------------------------------------
+  - job_name: "node-exporter-app"
+    static_configs:
+      - targets: ["{{ app_private_ip }}:{{ node_exporter_port | default(9100) }}"]
+        labels:
+          service: "node-exporter"
+          instance_role: "app"
+
+  # -------------------------------------------------------------------
+  #  Node Exporter — observability instance (local)  (:9100/metrics)
+  # -------------------------------------------------------------------
+  - job_name: "node-exporter-observability"
+    static_configs:
+      - targets: ["localhost:{{ node_exporter_port | default(9100) }}"]
+        labels:
+          service: "node-exporter"
+          instance_role: "observability"

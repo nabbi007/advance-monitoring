@@ -1,0 +1,81 @@
+---
+# tasks/main.yml — Voting App Docker Compose deployment
+#
+# Deploys the voting app stack (Redis, Backend, Frontend) via
+# Docker Compose on the app instance.
+
+- name: Create app project directory
+  ansible.builtin.file:
+    path: "{{ app_project_dir }}"
+    state: directory
+    owner: root
+    group: docker
+    mode: "0775"
+
+- name: Deploy application docker-compose file
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ app_project_dir }}/docker-compose.yml"
+    owner: root
+    group: docker
+    mode: "0644"
+  notify: Restart voting app
+
+- name: Deploy environment file
+  ansible.builtin.template:
+    src: dotenv.j2
+    dest: "{{ app_project_dir }}/.env"
+    owner: root
+    group: docker
+    mode: "0640"
+  notify: Restart voting app
+
+- name: Pull application Docker images
+  community.docker.docker_image:
+    name: "{{ item }}"
+    source: pull
+    force_source: true
+  loop:
+    - "{{ app_redis_image }}"
+    - "{{ app_backend_image }}"
+    - "{{ app_frontend_image }}"
+  retries: 3
+  delay: 10
+  ignore_errors: true
+  tags: [pull]
+
+- name: Start voting app with Docker Compose
+  community.docker.docker_compose_v2:
+    project_src: "{{ app_project_dir }}"
+    state: present
+    pull: missing
+  register: _app_compose
+
+- name: Wait for Redis to be healthy
+  ansible.builtin.command:
+    cmd: docker exec redis redis-cli ping
+  register: _redis_ping
+  until: _redis_ping.stdout is search("PONG")
+  retries: 30
+  delay: 5
+  changed_when: false
+
+- name: Wait for backend health check
+  ansible.builtin.uri:
+    url: "http://localhost:{{ app_backend_port }}/health"
+    method: GET
+    status_code: 200
+  register: _backend_health
+  until: _backend_health.status == 200
+  retries: 30
+  delay: 5
+
+- name: Wait for frontend health check
+  ansible.builtin.uri:
+    url: "http://localhost:{{ app_frontend_port }}/health"
+    method: GET
+    status_code: 200
+  register: _frontend_health
+  until: _frontend_health.status == 200
+  retries: 30
+  delay: 5

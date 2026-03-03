@@ -1,0 +1,14 @@
+---
+###############################################################################
+# roles/node_exporter/handlers/main.yml
+###############################################################################
+
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Restart node_exporter
+  ansible.builtin.systemd:
+    name: node_exporter
+    state: restarted
+    enabled: true

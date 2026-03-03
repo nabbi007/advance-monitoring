@@ -1,0 +1,16 @@
+---
+# handlers/main.yml — Grafana handlers
+
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Restart grafana
+  ansible.builtin.systemd:
+    name: grafana-server
+    state: restarted
+    enabled: true
+  register: _grafana_restart
+  until: _grafana_restart is succeeded
+  retries: 3
+  delay: 5

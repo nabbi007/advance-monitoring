@@ -1,0 +1,25 @@
+###############################################################################
+# group_vars/app.yml — Variables for the App instance
+###############################################################################
+
+# Docker Compose project directory
+app_project_dir: /opt/voting-app
+
+# Docker images (override with ECR URIs for production)
+ecr_backend_image: ""
+ecr_frontend_image: ""
+
+# App settings
+vote_options: "cats,dogs"
+backend_port: 3001
+frontend_port: 3000
+redis_port: 6379
+
+# Node Exporter
+node_exporter_version: "1.8.1"
+node_exporter_listen_port: 9100
+
+# Redis Exporter
+redis_exporter_version: "1.62.0"
+redis_exporter_listen_port: 9121
+redis_exporter_redis_addr: "redis://localhost:6379"

@@ -1,0 +1,14 @@
+###############################################################################
+# terraform.tfvars.example — Copy to terraform.tfvars and fill in values
+###############################################################################
+
+aws_region                  = "us-east-1"
+key_name                    = "your-key-pair-name"
+app_instance_type           = "t3.medium"
+observability_instance_type = "t3.medium"
+allowed_ssh_cidr            = "0.0.0.0/0"     # Restrict to your IP in production
+grafana_password            = "admin123"
+
+# Optional: ECR image URIs (leave empty to build locally on the instance)
+# ecr_backend_image  = "123456789012.dkr.ecr.us-east-1.amazonaws.com/voting-backend:latest"
+# ecr_frontend_image = "123456789012.dkr.ecr.us-east-1.amazonaws.com/voting-frontend:latest"

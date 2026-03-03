@@ -1,0 +1,18 @@
+---
+# defaults/main.yml — App Docker role defaults
+
+app_project_dir: "/opt/voting-app"
+
+# Docker images — override with ECR URIs for production
+app_backend_image: "voting-backend:latest"
+app_frontend_image: "voting-frontend:latest"
+app_redis_image: "redis:7-alpine"
+
+# Ports
+app_backend_port: 3001
+app_frontend_port: 3000
+app_redis_port: 6379
+
+# Environment
+app_vote_options: "cats,dogs"
+app_node_env: "production"

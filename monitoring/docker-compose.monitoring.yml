@@ -1,0 +1,41 @@
+###############################################################################
+# docker-compose.monitoring.yml — Observability Stack (Instance 2)
+#
+#  Service: jaeger (distributed tracing)
+#
+#  NOTE: Prometheus and Grafana are NOT run here.
+#  They are installed as native systemd services on the host via Ansible
+#  roles (ansible/roles/prometheus, ansible/roles/grafana) so they can be
+#  managed via systemctl, survive reboots without Docker, and reload
+#  configuration with zero downtime (prometheus --web.enable-lifecycle).
+###############################################################################
+
+version: "3.9"
+
+services:
+  # -----------------------------------------------------------------------
+  #  Jaeger — distributed tracing (all-in-one)
+  # -----------------------------------------------------------------------
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    restart: unless-stopped
+    ports:
+      - "16686:16686"   # Jaeger UI
+      - "4317:4317"     # OTLP gRPC
+      - "4318:4318"     # OTLP HTTP
+      - "14268:14268"   # Jaeger HTTP Thrift
+      - "14250:14250"   # Jaeger gRPC model
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+      SPAN_STORAGE_TYPE: "memory"
+      MEMORY_MAX_TRACES: "50000"
+    networks:
+      - monitoring-net
+
+# prometheus  → systemd service  (port 9090)  — see ansible/roles/prometheus
+# grafana     → systemd service  (port 3000)  — see ansible/roles/grafana
+
+networks:
+  monitoring-net:
+    driver: bridge
