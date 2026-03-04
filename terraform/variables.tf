@@ -8,7 +8,7 @@
 variable "aws_region" {
   description = "AWS region to deploy resources"
   type        = string
-  default     = "us-east-1"
+  default     = "eu-west-1"
 }
 
 # -----------------------------------------------------------------------
@@ -45,11 +45,11 @@ variable "observability_instance_type" {
 #  SSH / Access
 # -----------------------------------------------------------------------
 variable "ami_id" {
-  description = "AMI ID for EC2 instances. Defaults to Ubuntu 22.04 LTS (us-east-1). Set explicitly for other regions or to skip ec2:DescribeImages."
+  description = "AMI ID for EC2 instances. Defaults to Ubuntu 22.04 LTS (eu-west-1). Override for other regions."
   type        = string
-  # Ubuntu 22.04 LTS (Jammy) — us-east-1, hvm-ssd, 20240301 build (Canonical 099720109477)
-  # Find AMI for your region: https://cloud-images.ubuntu.com/locator/ec2/
-  default     = "ami-0c7217cdde317cfec"
+  # Ubuntu 22.04 LTS (Jammy) — eu-west-1, hvm-ssd (Canonical owner 099720109477)
+  # Verify or find for your region: https://cloud-images.ubuntu.com/locator/ec2/
+  default     = "ami-0d75513e7706cf2d9"
 }
 
 variable "allowed_ssh_cidr" {

@@ -13,3 +13,4 @@ terraform.rc
 
 # Keep Terraform dependency lock file versioned
 !**/.terraform.lock.hcl
+terraform.tfvars
