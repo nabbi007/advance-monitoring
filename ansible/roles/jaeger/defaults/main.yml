@@ -2,7 +2,7 @@
 # defaults/main.yml — Jaeger role defaults
 
 jaeger_image: "jaegertracing/all-in-one"
-jaeger_version: "latest"
+jaeger_version: "1.57"
 jaeger_ui_port: 16686
 jaeger_otlp_grpc_port: 4317
 jaeger_otlp_http_port: 4318

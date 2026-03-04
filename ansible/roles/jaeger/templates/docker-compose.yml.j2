@@ -4,7 +4,7 @@
 
 services:
   jaeger:
-    image: "{{ jaeger_image }}:{{ jaeger_version }}"
+    image: {{ jaeger_image }}:{{ jaeger_version }}
     container_name: jaeger
     restart: unless-stopped
     ports:

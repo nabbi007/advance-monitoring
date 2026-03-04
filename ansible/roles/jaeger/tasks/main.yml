@@ -23,16 +23,16 @@
   notify: Restart jaeger
 
 - name: Pull Jaeger image
-  community.docker.docker_image:
-    name: "{{ jaeger_image }}:{{ jaeger_version }}"
-    source: pull
-    force_source: true
+  ansible.builtin.command:
+    cmd: docker pull {{ jaeger_image }}:{{ jaeger_version }}
+  register: _jaeger_pull
+  changed_when: "'Downloaded newer' in _jaeger_pull.stdout or 'Pull complete' in _jaeger_pull.stdout"
   retries: 3
   delay: 10
 
 - name: Start Jaeger with Docker Compose
   ansible.builtin.command:
-    cmd: docker compose up -d --quiet-pull
+    cmd: docker compose up -d
     chdir: /opt/jaeger
   register: _jaeger_compose
   changed_when: "'Started' in _jaeger_compose.stderr or 'Creating' in _jaeger_compose.stderr"
