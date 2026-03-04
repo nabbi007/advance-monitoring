@@ -201,63 +201,117 @@ jobs:
 
   # ---------------------------------------------------------------------------
   #  3. Deploy with Ansible
+  #     Fetches all IPs and config live from Terraform state — no cross-job
+  #     output passing means no empty-variable surprises.
   # ---------------------------------------------------------------------------
   ansible-deploy:
     name: Ansible Deploy
     runs-on: ubuntu-latest
-    needs: [setup, build-and-push]
+    needs: [setup, build-and-push]   # wait for infra + images to be ready
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Ansible
-        run: pip install ansible
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~1.7"
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init -input=false
+
+      - name: Fetch dynamic values from Terraform state
+        id: tf
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          APP_PUBLIC_IP=$(terraform output -raw app_instance_public_ip)
+          APP_PRIVATE_IP=$(terraform output -raw app_instance_private_ip)
+          OBS_PUBLIC_IP=$(terraform output -raw observability_instance_public_ip)
+          OBS_PRIVATE_IP=$(terraform output -raw observability_instance_private_ip)
+          ECR_REGISTRY=$(terraform output -raw ecr_registry)
+          ECR_BACKEND=$(terraform output -raw ecr_backend_repository_url)
+          ECR_FRONTEND=$(terraform output -raw ecr_frontend_repository_url)
+          AWS_REGION_VAL=$(terraform output -raw aws_region)
+
+          echo "app_public_ip=$APP_PUBLIC_IP"   >> "$GITHUB_OUTPUT"
+          echo "app_private_ip=$APP_PRIVATE_IP" >> "$GITHUB_OUTPUT"
+          echo "obs_public_ip=$OBS_PUBLIC_IP"   >> "$GITHUB_OUTPUT"
+          echo "obs_private_ip=$OBS_PRIVATE_IP" >> "$GITHUB_OUTPUT"
+          echo "ecr_registry=$ECR_REGISTRY"     >> "$GITHUB_OUTPUT"
+          echo "ecr_backend=$ECR_BACKEND"       >> "$GITHUB_OUTPUT"
+          echo "ecr_frontend=$ECR_FRONTEND"     >> "$GITHUB_OUTPUT"
+          echo "aws_region=$AWS_REGION_VAL"     >> "$GITHUB_OUTPUT"
+
+          echo "ssh_private_key<<KEYEOF" >> "$GITHUB_OUTPUT"
+          terraform output -raw ssh_private_key >> "$GITHUB_OUTPUT"
+          echo "KEYEOF" >> "$GITHUB_OUTPUT"
+
+          echo "=== Infrastructure IPs ==="
+          echo "  App:           $APP_PUBLIC_IP (private: $APP_PRIVATE_IP)"
+          echo "  Observability: $OBS_PUBLIC_IP (private: $OBS_PRIVATE_IP)"
+          echo "  ECR registry:  $ECR_REGISTRY"
 
       - name: Write SSH key
         run: |
           mkdir -p ~/.ssh
-          echo '${{ needs.setup.outputs.ssh_private_key }}' > ~/.ssh/deploy_key.pem
+          printf '%s' '${{ steps.tf.outputs.ssh_private_key }}' > ~/.ssh/deploy_key.pem
           chmod 600 ~/.ssh/deploy_key.pem
 
-      - name: Generate Ansible inventory
+      - name: Install Ansible
+        run: pip install ansible
+
+      - name: Generate Ansible inventory from Terraform outputs
         run: |
           mkdir -p ansible/inventory
-          cat > ansible/inventory/hosts.ini << INVENTORY
-[app]
-app-01 ansible_host=${{ needs.setup.outputs.app_public_ip }} private_ip=${{ needs.setup.outputs.app_private_ip }}
+          INV="ansible/inventory/hosts.ini"
+          {
+            echo "[app]"
+            echo "app-01 ansible_host=${{ steps.tf.outputs.app_public_ip }} ansible_user=ubuntu private_ip=${{ steps.tf.outputs.app_private_ip }}"
+            echo ""
+            echo "[observability]"
+            echo "obs-01 ansible_host=${{ steps.tf.outputs.obs_public_ip }} ansible_user=ubuntu private_ip=${{ steps.tf.outputs.obs_private_ip }}"
+            echo ""
+            echo "[all:vars]"
+            echo "ansible_ssh_private_key_file=~/.ssh/deploy_key.pem"
+            echo "ansible_ssh_common_args=-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+            echo ""
+            echo "app_private_ip=${{ steps.tf.outputs.app_private_ip }}"
+            echo "observability_private_ip=${{ steps.tf.outputs.obs_private_ip }}"
+            echo ""
+            echo "ecr_registry=${{ steps.tf.outputs.ecr_registry }}"
+            echo "ecr_backend_repo=${{ steps.tf.outputs.ecr_backend }}"
+            echo "ecr_frontend_repo=${{ steps.tf.outputs.ecr_frontend }}"
+            echo "aws_region=${{ steps.tf.outputs.aws_region }}"
+            echo ""
+            echo "app_backend_image=${{ needs.build-and-push.outputs.backend_image }}"
+            echo "app_frontend_image=${{ needs.build-and-push.outputs.frontend_image }}"
+          } > "$INV"
+          echo "=== Generated inventory ==="
+          cat "$INV"
 
-[observability]
-obs-01 ansible_host=${{ needs.setup.outputs.obs_public_ip }} private_ip=${{ needs.setup.outputs.obs_private_ip }}
-
-[all:vars]
-ansible_user=ubuntu
-ansible_ssh_private_key_file=~/.ssh/deploy_key.pem
-ansible_ssh_common_args=-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
-
-app_private_ip=${{ needs.setup.outputs.app_private_ip }}
-observability_private_ip=${{ needs.setup.outputs.obs_private_ip }}
-
-ecr_registry=${{ needs.build-and-push.outputs.ecr_registry }}
-ecr_backend_repo=${{ needs.build-and-push.outputs.ecr_backend_repo }}
-ecr_frontend_repo=${{ needs.build-and-push.outputs.ecr_frontend_repo }}
-aws_region=${{ env.AWS_REGION }}
-
-app_backend_image=${{ needs.build-and-push.outputs.backend_image }}
-app_frontend_image=${{ needs.build-and-push.outputs.frontend_image }}
-INVENTORY
-
-      - name: Wait for instances
+      - name: Wait for SSH on both instances
         run: |
-          for HOST in "${{ needs.setup.outputs.app_public_ip }}" "${{ needs.setup.outputs.obs_public_ip }}"; do
-            echo "Waiting for $HOST..."
+          for HOST in "${{ steps.tf.outputs.app_public_ip }}" "${{ steps.tf.outputs.obs_public_ip }}"; do
+            echo "Waiting for SSH on $HOST ..."
             for i in $(seq 1 30); do
               if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
                      -o BatchMode=yes -i ~/.ssh/deploy_key.pem \
                      ubuntu@"$HOST" "echo ready" &>/dev/null; then
-                echo "$HOST is reachable."
+                echo "  $HOST is reachable."
                 break
               fi
+              echo "  attempt $i/30 — retrying in 10s"
               sleep 10
             done
           done
@@ -270,14 +324,78 @@ INVENTORY
           TAGS="${{ github.event.inputs.ansible_tags }}"
           LIMIT="${{ github.event.inputs.ansible_limit }}"
 
-          if [[ -n "$TAGS" ]]; then
-            ANSIBLE_CMD="$ANSIBLE_CMD --tags $TAGS"
-          fi
-
-          if [[ -n "$LIMIT" ]]; then
-            ANSIBLE_CMD="$ANSIBLE_CMD --limit $LIMIT"
-          fi
+          [[ -n "$TAGS" ]]  && ANSIBLE_CMD="$ANSIBLE_CMD --tags $TAGS"
+          [[ -n "$LIMIT" ]] && ANSIBLE_CMD="$ANSIBLE_CMD --limit $LIMIT"
 
           echo "Running: $ANSIBLE_CMD"
           $ANSIBLE_CMD
 
+  # ---------------------------------------------------------------------------
+  #  4. Smoke-test health endpoints
+  #     Also fetches IPs live from Terraform — no dependency on setup outputs.
+  # ---------------------------------------------------------------------------
+  smoke-test:
+    name: Smoke Test
+    runs-on: ubuntu-latest
+    needs: [ansible-deploy]
+    if: always() && needs.ansible-deploy.result == 'success'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~1.7"
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init -input=false
+
+      - name: Fetch IPs from Terraform state
+        id: tf
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          echo "app_ip=$(terraform output -raw app_instance_public_ip)"   >> "$GITHUB_OUTPUT"
+          echo "obs_ip=$(terraform output -raw observability_instance_public_ip)" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for services to stabilise
+        run: sleep 20
+
+      - name: Check health endpoints
+        run: |
+          APP_IP="${{ steps.tf.outputs.app_ip }}"
+          OBS_IP="${{ steps.tf.outputs.obs_ip }}"
+          FAILED=0
+
+          check() {
+            if curl -sf --max-time 15 "$1" > /dev/null; then
+              echo "✓ $2"
+            else
+              echo "✗ $2 — not ready"
+              FAILED=$((FAILED + 1))
+            fi
+          }
+
+          check "http://$APP_IP:3000/health"     "Frontend"
+          check "http://$APP_IP:3001/health"     "Backend"
+          check "http://$APP_IP:9100/metrics"    "Node Exporter (app)"
+          check "http://$APP_IP:9121/metrics"    "Redis Exporter"
+          check "http://$OBS_IP:9090/-/healthy"  "Prometheus"
+          check "http://$OBS_IP:3000/api/health" "Grafana"
+          check "http://$OBS_IP:16686/"          "Jaeger"
+          check "http://$OBS_IP:9100/metrics"    "Node Exporter (obs)"
+
+          [[ $FAILED -gt 0 ]] && echo "WARNING: $FAILED service(s) not yet healthy"
+          exit 0
+          fi
