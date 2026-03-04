@@ -74,16 +74,6 @@
     - /etc/prometheus
     - /var/lib/prometheus
 
-- name: Deploy prometheus.yml configuration
-  ansible.builtin.template:
-    src: prometheus.yml.j2
-    dest: /etc/prometheus/prometheus.yml
-    owner: prometheus
-    group: prometheus
-    mode: "0644"
-    validate: "/usr/local/bin/promtool check config %s"
-  notify: Reload prometheus
-
 - name: Deploy alert_rules.yml
   ansible.builtin.template:
     src: alert_rules.yml.j2
@@ -92,6 +82,16 @@
     group: prometheus
     mode: "0644"
     validate: "/usr/local/bin/promtool check rules %s"
+  notify: Reload prometheus
+
+- name: Deploy prometheus.yml configuration
+  ansible.builtin.template:
+    src: prometheus.yml.j2
+    dest: /etc/prometheus/prometheus.yml
+    owner: prometheus
+    group: prometheus
+    mode: "0644"
+    validate: "/usr/local/bin/promtool check config %s"
   notify: Reload prometheus
 
 - name: Deploy prometheus systemd unit
