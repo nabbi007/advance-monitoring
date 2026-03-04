@@ -34,7 +34,7 @@
   community.docker.docker_compose_v2:
     project_src: /opt/jaeger
     state: present
-    pull: missing
+    pull: never
   register: _jaeger_compose
 
 - name: Wait for Jaeger UI to be ready
