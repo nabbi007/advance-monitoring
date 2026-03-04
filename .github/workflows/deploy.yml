@@ -1,19 +1,23 @@
 ###############################################################################
 # deploy.yml — Continuous Deployment
 #
-# Triggered on push to main (or manual dispatch).
-# 1. Reads Terraform outputs for dynamic IPs & ECR URLs (S3 backend required).
-# 2. Builds Docker images and pushes to ECR.
-# 3. Optionally runs Terraform apply for infrastructure changes.
-# 4. Runs Ansible playbooks to configure instances and deploy.
-# 5. Smoke-tests health endpoints.
+# IMPORTANT: For DCE/temporary credentials:
+# 1. Run `terraform apply` LOCALLY with fresh credentials to provision infra
+#    (infrastructure state is saved to S3)
+# 2. Push to main — CI/CD reads state from S3 and deploys with Ansible
+# 3. CI uses -backend=false to avoid S3 auth with short-lived tokens
+#
+# Workflow:
+# 1. terraform init (no backend) + validate only
+# 2. Build Docker images and push to ECR (needs AWS creds)
+# 3. Read Terraform outputs from S3 (provisions state already exists)
+# 4. Run Ansible playbooks to deploy to EC2 instances
+# 5. Smoke-tests health endpoints
 #
 # Required GitHub Secrets:
 #   AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY — IAM credentials
-#   AWS_REGION            — AWS region (e.g. us-east-1)
-#
-# NOTE: Instance IPs, ECR URLs, and the SSH key are all read dynamically
-#       from Terraform remote state (S3 backend). No hardcoded secrets needed.
+#   AWS_SESSION_TOKEN         — Temporary session token (required for DCE)
+#   AWS_REGION                — AWS region (e.g. eu-west-1)
 ###############################################################################
 name: Deploy
 
@@ -70,6 +74,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Setup Terraform
@@ -127,6 +132,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ needs.setup.outputs.aws_region }}
 
       - name: Login to Amazon ECR
