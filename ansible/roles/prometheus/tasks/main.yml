@@ -95,7 +95,9 @@
     owner: prometheus
     group: prometheus
     mode: "0644"
-    validate: "/usr/local/bin/promtool check config %s"
+    # validate runs against a temp file; promtool resolves rule_files
+    # relative to that temp dir so it fails.  alert_rules.yml is already
+    # validated independently with "promtool check rules".
   notify: Reload prometheus
 
 - name: Deploy prometheus systemd unit
