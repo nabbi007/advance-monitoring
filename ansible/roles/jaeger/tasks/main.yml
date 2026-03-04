@@ -31,11 +31,11 @@
   delay: 10
 
 - name: Start Jaeger with Docker Compose
-  community.docker.docker_compose_v2:
-    project_src: /opt/jaeger
-    state: present
-    pull: never
+  ansible.builtin.command:
+    cmd: docker compose up -d --quiet-pull
+    chdir: /opt/jaeger
   register: _jaeger_compose
+  changed_when: "'Started' in _jaeger_compose.stderr or 'Creating' in _jaeger_compose.stderr"
 
 - name: Wait for Jaeger UI to be ready
   ansible.builtin.uri:
