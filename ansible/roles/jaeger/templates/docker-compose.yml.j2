@@ -4,7 +4,7 @@
 
 services:
   jaeger:
-    image: {{ jaeger_image }}:{{ jaeger_version }}
+    image: "{{ jaeger_image }}:{{ jaeger_version }}"
     container_name: jaeger
     restart: unless-stopped
     ports:
@@ -20,11 +20,11 @@ services:
     networks:
       - monitoring-net
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:16686/"]
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:16686/ || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 5
-      start_period: 10s
+      start_period: 15s
 
 networks:
   monitoring-net:
