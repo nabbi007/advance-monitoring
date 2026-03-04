@@ -19,10 +19,10 @@ output "registry_id" {
 
 output "backend_repository_url" {
   description = "ECR URL for the voting-backend image"
-  value       = try(aws_ecr_repository.this["voting-backend"].repository_url, "")
+  value       = aws_ecr_repository.this["voting-backend"].repository_url
 }
 
 output "frontend_repository_url" {
   description = "ECR URL for the voting-frontend image"
-  value       = try(aws_ecr_repository.this["voting-frontend"].repository_url, "")
+  value       = aws_ecr_repository.this["voting-frontend"].repository_url
 }

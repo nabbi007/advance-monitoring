@@ -1,18 +1,11 @@
 ###############################################################################
 # deploy.yml — Continuous Deployment
 #
-# IMPORTANT: For DCE/temporary credentials:
-# 1. Run `terraform apply` LOCALLY with fresh credentials to provision infra
-#    (infrastructure state is saved to S3)
-# 2. Push to main — CI/CD reads state from S3 and deploys with Ansible
-# 3. CI uses -backend=false to avoid S3 auth with short-lived tokens
-#
 # Workflow:
-# 1. terraform init (no backend) + validate only
-# 2. Build Docker images and push to ECR (needs AWS creds)
-# 3. Read Terraform outputs from S3 (provisions state already exists)
-# 4. Run Ansible playbooks to deploy to EC2 instances
-# 5. Smoke-tests health endpoints
+# 1. terraform init + apply (idempotent — creates/updates infrastructure)
+# 2. Build Docker images and push to ECR
+# 3. Run Ansible playbooks to deploy to EC2 instances
+# 4. Smoke-tests health endpoints
 #
 # Required GitHub Secrets:
 #   AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY — IAM credentials
@@ -87,19 +80,7 @@ jobs:
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform init -input=false
 
-      - name: Check if infrastructure exists
-        id: check_state
-        working-directory: ${{ env.TF_WORKING_DIR }}
-        run: |
-          if terraform output -raw app_instance_public_ip &>/dev/null; then
-            echo "has_state=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "has_state=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::No infrastructure found — terraform apply will run automatically."
-          fi
-
       - name: Terraform Apply
-        if: ${{ steps.check_state.outputs.has_state == 'false' || github.event.inputs.deploy_infra == 'true' }}
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: |
           terraform plan -input=false -out=tfplan
@@ -109,14 +90,32 @@ jobs:
         id: outputs
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: |
-          echo "app_public_ip=$(terraform output -raw app_instance_public_ip)" >> "$GITHUB_OUTPUT"
-          echo "app_private_ip=$(terraform output -raw app_instance_private_ip)" >> "$GITHUB_OUTPUT"
-          echo "obs_public_ip=$(terraform output -raw observability_instance_public_ip)" >> "$GITHUB_OUTPUT"
-          echo "obs_private_ip=$(terraform output -raw observability_instance_private_ip)" >> "$GITHUB_OUTPUT"
-          echo "ecr_registry=$(terraform output -raw ecr_registry)" >> "$GITHUB_OUTPUT"
-          echo "ecr_backend_repo=$(terraform output -raw ecr_backend_repository_url)" >> "$GITHUB_OUTPUT"
-          echo "ecr_frontend_repo=$(terraform output -raw ecr_frontend_repository_url)" >> "$GITHUB_OUTPUT"
-          echo "aws_region=$(terraform output -raw aws_region)" >> "$GITHUB_OUTPUT"
+          APP_IP=$(terraform output -raw app_instance_public_ip)
+          APP_PRIV=$(terraform output -raw app_instance_private_ip)
+          OBS_IP=$(terraform output -raw observability_instance_public_ip)
+          OBS_PRIV=$(terraform output -raw observability_instance_private_ip)
+          ECR_REG=$(terraform output -raw ecr_registry)
+          ECR_BE=$(terraform output -raw ecr_backend_repository_url)
+          ECR_FE=$(terraform output -raw ecr_frontend_repository_url)
+          REGION=$(terraform output -raw aws_region)
+
+          # Validate critical outputs are non-empty
+          for var_name in APP_IP OBS_IP ECR_BE ECR_FE ECR_REG; do
+            eval val=\$${var_name}
+            if [[ -z "$val" ]]; then
+              echo "::error::Terraform output ${var_name} is empty — infrastructure may not have been created correctly."
+              exit 1
+            fi
+          done
+
+          echo "app_public_ip=$APP_IP"   >> "$GITHUB_OUTPUT"
+          echo "app_private_ip=$APP_PRIV" >> "$GITHUB_OUTPUT"
+          echo "obs_public_ip=$OBS_IP"   >> "$GITHUB_OUTPUT"
+          echo "obs_private_ip=$OBS_PRIV" >> "$GITHUB_OUTPUT"
+          echo "ecr_registry=$ECR_REG"   >> "$GITHUB_OUTPUT"
+          echo "ecr_backend_repo=$ECR_BE"  >> "$GITHUB_OUTPUT"
+          echo "ecr_frontend_repo=$ECR_FE" >> "$GITHUB_OUTPUT"
+          echo "aws_region=$REGION"       >> "$GITHUB_OUTPUT"
 
           # SSH key — multiline value needs EOF delimiter
           echo 'ssh_private_key<<KEYEOF' >> "$GITHUB_OUTPUT"
