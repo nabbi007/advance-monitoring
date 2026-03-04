@@ -16,11 +16,10 @@ terraform {
     }
   }
   backend "s3" {
-    bucket       = "advance-monitoring-tfstate"
-    key          = "dev/terraform.tfstate"
-    region       = "eu-west-1"
-    encrypt      = true
-    use_lockfile = true
+    bucket  = "advance-monitoring-tfstate"
+    key     = "dev/terraform.tfstate"
+    region  = "eu-west-1"
+    encrypt = true
   }
 }
 
