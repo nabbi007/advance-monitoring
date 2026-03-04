@@ -2,12 +2,18 @@
 # variables.tf — Input Variables
 ###############################################################################
 
+# -----------------------------------------------------------------------
+#  AWS Region
+# -----------------------------------------------------------------------
 variable "aws_region" {
   description = "AWS region to deploy resources"
   type        = string
   default     = "us-east-1"
 }
 
+# -----------------------------------------------------------------------
+#  Networking
+# -----------------------------------------------------------------------
 variable "vpc_cidr" {
   description = "CIDR block for the VPC"
   type        = string
@@ -35,15 +41,15 @@ variable "observability_instance_type" {
   default     = "t3.medium"
 }
 
-variable "key_name" {
-  description = "Name of the EC2 key pair for SSH access"
-  type        = string
-}
-
+# -----------------------------------------------------------------------
+#  SSH / Access
+# -----------------------------------------------------------------------
 variable "ami_id" {
-  description = "AMI ID for EC2 instances (leave empty for latest Ubuntu 22.04)"
+  description = "AMI ID for EC2 instances. Defaults to Ubuntu 22.04 LTS (us-east-1). Set explicitly for other regions or to skip ec2:DescribeImages."
   type        = string
-  default     = ""
+  # Ubuntu 22.04 LTS (Jammy) — us-east-1, hvm-ssd, 20240301 build (Canonical 099720109477)
+  # Find AMI for your region: https://cloud-images.ubuntu.com/locator/ec2/
+  default     = "ami-0c7217cdde317cfec"
 }
 
 variable "allowed_ssh_cidr" {
@@ -52,6 +58,9 @@ variable "allowed_ssh_cidr" {
   default     = "0.0.0.0/0"
 }
 
+# -----------------------------------------------------------------------
+#  Application
+# -----------------------------------------------------------------------
 variable "grafana_password" {
   description = "Grafana admin password"
   type        = string
@@ -63,16 +72,4 @@ variable "project_name" {
   description = "Project name used for resource tagging"
   type        = string
   default     = "advance-monitoring"
-}
-
-variable "ecr_backend_image" {
-  description = "ECR image URI for the voting backend (leave empty to build locally)"
-  type        = string
-  default     = ""
-}
-
-variable "ecr_frontend_image" {
-  description = "ECR image URI for the voting frontend (leave empty to build locally)"
-  type        = string
-  default     = ""
 }

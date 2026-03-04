@@ -1,6 +1,4 @@
-###############################################################################
 # modules/ec2-instance/main.tf — Reusable EC2 instance resource
-###############################################################################
 
 resource "aws_instance" "this" {
   ami                    = var.ami_id

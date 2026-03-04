@@ -1,5 +1,5 @@
 ###############################################################################
-# provider.tf — AWS Provider Configuration
+# provider.tf — AWS Provider & Backend Configuration
 ###############################################################################
 
 terraform {
@@ -10,7 +10,19 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    tls = {
+      source  = "hashicorp/tls"
+      version = "~> 4.0"
+    }
   }
+  backend "s3" {
+    bucket         = "advance-monitoring-tfstate"
+    key            = "dev/terraform.tfstate"
+    region         = "eu-west-1"
+    encrypt        = true
+    use_lockfile = true   
+    
+    }
 }
 
 provider "aws" {

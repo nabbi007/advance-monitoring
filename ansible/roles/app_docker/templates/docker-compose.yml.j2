@@ -28,7 +28,7 @@ services:
     environment:
       PORT: "3001"
       REDIS_URL: "redis://redis:6379"
-      VOTE_OPTIONS: "{{ app_vote_options }}"
+      POLL_CACHE_TTL_MS: "{{ app_poll_cache_ttl_ms }}"
       OTEL_SERVICE_NAME: "voting-backend"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://{{ observability_private_ip }}:4318/v1/traces"
       NODE_ENV: "{{ app_node_env }}"

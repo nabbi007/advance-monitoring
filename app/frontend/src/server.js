@@ -4,7 +4,6 @@ const express = require("express");
 const axios = require("axios");
 const path = require("path");
 const client = require("prom-client");
-const api = require("@opentelemetry/api");
 const logger = require("./logger");
 
 /* ------------------------------------------------------------------ */
@@ -47,6 +46,12 @@ function metricsMiddleware(req, res, next) {
   next();
 }
 
+function extractError(err, fallback) {
+  const status = err.response ? err.response.status : 502;
+  const payload = err.response ? err.response.data : { error: fallback };
+  return { status, payload };
+}
+
 /* ------------------------------------------------------------------ */
 /*  Express App                                                       */
 /* ------------------------------------------------------------------ */
@@ -58,48 +63,81 @@ app.use(express.static(path.join(__dirname, "public")));
 
 /* ----------  Proxy API calls to backend  ---------- */
 
-app.get("/api/votes", async (req, res) => {
+app.get("/api/polls", async (_req, res) => {
   try {
-    const response = await axios.get(`${BACKEND_URL}/api/votes`);
-    logger.info("Fetched votes from backend");
+    const response = await axios.get(`${BACKEND_URL}/api/polls`);
     res.json(response.data);
   } catch (err) {
-    logger.error("Failed to fetch votes", { error: err.message });
-    res.status(502).json({ error: "Backend unavailable" });
+    logger.error("Failed to fetch polls", { error: err.message });
+    const { status, payload } = extractError(err, "Backend unavailable");
+    res.status(status).json(payload);
   }
 });
 
-app.post("/api/vote", async (req, res) => {
+app.post("/api/polls", async (req, res) => {
   try {
-    const response = await axios.post(`${BACKEND_URL}/api/vote`, req.body);
-    logger.info("Vote proxied to backend", { option: req.body.option });
-    res.json(response.data);
+    const response = await axios.post(`${BACKEND_URL}/api/polls`, req.body);
+    logger.info("Poll created", { question: req.body.question });
+    res.status(response.status).json(response.data);
   } catch (err) {
-    logger.error("Failed to proxy vote", { error: err.message, option: req.body.option });
-    const status = err.response ? err.response.status : 502;
-    res.status(status).json(err.response ? err.response.data : { error: "Backend unavailable" });
+    logger.error("Failed to create poll", { error: err.message });
+    const { status, payload } = extractError(err, "Backend unavailable");
+    res.status(status).json(payload);
   }
 });
 
-app.get("/api/results", async (req, res) => {
+app.get("/api/polls/:pollId", async (req, res) => {
   try {
-    const response = await axios.get(`${BACKEND_URL}/api/results`);
-    logger.info("Fetched results from backend");
+    const response = await axios.get(`${BACKEND_URL}/api/polls/${req.params.pollId}`);
     res.json(response.data);
   } catch (err) {
-    logger.error("Failed to fetch results", { error: err.message });
-    res.status(502).json({ error: "Backend unavailable" });
+    logger.error("Failed to fetch poll", { error: err.message, pollId: req.params.pollId });
+    const { status, payload } = extractError(err, "Backend unavailable");
+    res.status(status).json(payload);
   }
 });
 
-app.post("/api/reset", async (req, res) => {
+app.post("/api/polls/:pollId/vote", async (req, res) => {
   try {
-    const response = await axios.post(`${BACKEND_URL}/api/reset`);
-    logger.info("Votes reset proxied to backend");
+    const response = await axios.post(`${BACKEND_URL}/api/polls/${req.params.pollId}/vote`, req.body);
     res.json(response.data);
   } catch (err) {
-    logger.error("Failed to reset votes", { error: err.message });
-    res.status(502).json({ error: "Backend unavailable" });
+    logger.error("Failed to vote", { error: err.message, pollId: req.params.pollId });
+    const { status, payload } = extractError(err, "Backend unavailable");
+    res.status(status).json(payload);
+  }
+});
+
+app.patch("/api/polls/:pollId/close", async (req, res) => {
+  try {
+    const response = await axios.patch(`${BACKEND_URL}/api/polls/${req.params.pollId}/close`, req.body);
+    res.json(response.data);
+  } catch (err) {
+    logger.error("Failed to close poll", { error: err.message, pollId: req.params.pollId });
+    const { status, payload } = extractError(err, "Backend unavailable");
+    res.status(status).json(payload);
+  }
+});
+
+app.post("/api/polls/:pollId/reset", async (req, res) => {
+  try {
+    const response = await axios.post(`${BACKEND_URL}/api/polls/${req.params.pollId}/reset`, req.body);
+    res.json(response.data);
+  } catch (err) {
+    logger.error("Failed to reset poll", { error: err.message, pollId: req.params.pollId });
+    const { status, payload } = extractError(err, "Backend unavailable");
+    res.status(status).json(payload);
+  }
+});
+
+app.delete("/api/polls/:pollId", async (req, res) => {
+  try {
+    const response = await axios.delete(`${BACKEND_URL}/api/polls/${req.params.pollId}`);
+    res.json(response.data);
+  } catch (err) {
+    logger.error("Failed to delete poll", { error: err.message, pollId: req.params.pollId });
+    const { status, payload } = extractError(err, "Backend unavailable");
+    res.status(status).json(payload);
   }
 });
 
@@ -137,7 +175,7 @@ app.get("*", (_req, res) => {
 /* ------------------------------------------------------------------ */
 
 app.listen(PORT, "0.0.0.0", () => {
-  logger.info(`Voting frontend listening on port ${PORT}`, { port: PORT, backend: BACKEND_URL });
+  logger.info(`Quick Poll frontend listening on port ${PORT}`, { port: PORT, backend: BACKEND_URL });
 });
 
 module.exports = app;

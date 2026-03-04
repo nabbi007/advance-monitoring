@@ -103,8 +103,8 @@ jobs:
       - name: Terraform Format Check
         run: terraform fmt -check -recursive
 
-      - name: Terraform Init (no backend)
-        run: terraform init -backend=false
+      - name: Terraform Init 
+        run: terraform init 
 
       - name: Terraform Validate
         run: terraform validate

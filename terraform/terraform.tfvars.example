@@ -2,13 +2,21 @@
 # terraform.tfvars.example — Copy to terraform.tfvars and fill in values
 ###############################################################################
 
-aws_region                  = "us-east-1"
-key_name                    = "your-key-pair-name"
+aws_region                  = "eu-west-1"
 app_instance_type           = "t3.medium"
 observability_instance_type = "t3.medium"
 allowed_ssh_cidr            = "0.0.0.0/0"     # Restrict to your IP in production
 grafana_password            = "admin123"
 
-# Optional: ECR image URIs (leave empty to build locally on the instance)
-# ecr_backend_image  = "123456789012.dkr.ecr.us-east-1.amazonaws.com/voting-backend:latest"
-# ecr_frontend_image = "123456789012.dkr.ecr.us-east-1.amazonaws.com/voting-frontend:latest"
+# ami_id is pre-set to Ubuntu 22.04 LTS (us-east-1) in variables.tf.
+# Override here for a different region:
+# ami_id = "ami-xxxxxxxxxxxxxxxxx"
+# Find your region's AMI: https://cloud-images.ubuntu.com/locator/ec2/
+
+# project_name = "advance-monitoring"   # (default)
+# vpc_cidr     = "10.0.0.0/16"          # (default)
+
+# SSH key pair is auto-generated from project_name.
+# After `terraform apply`, run:
+#   terraform output -raw ssh_private_key > ~/.ssh/deploy_key.pem
+#   chmod 600 ~/.ssh/deploy_key.pem

@@ -2,7 +2,22 @@
 # tasks/main.yml — Voting App Docker Compose deployment
 #
 # Deploys the voting app stack (Redis, Backend, Frontend) via
-# Docker Compose on the app instance.
+# Docker Compose on the app instance. Authenticates with ECR
+# to pull backend/frontend images.
+
+- name: Install AWS CLI (for ECR login)
+  ansible.builtin.apt:
+    name: awscli
+    state: present
+  when: ecr_registry is defined and ecr_registry | length > 0
+
+- name: Authenticate Docker with ECR
+  ansible.builtin.shell: |
+    aws ecr get-login-password --region {{ aws_region | default('us-east-1') }} | \
+      docker login --username AWS --password-stdin {{ ecr_registry }}
+  when: ecr_registry is defined and ecr_registry | length > 0
+  changed_when: false
+  no_log: true
 
 - name: Create app project directory
   ansible.builtin.file:

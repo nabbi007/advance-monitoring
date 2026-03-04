@@ -3,246 +3,551 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Voting App</title>
+  <title>Quick Poll</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg-top: #f4efe6;
+      --bg-bottom: #dce8ee;
+      --panel: #ffffff;
+      --panel-soft: #f7fbff;
+      --text: #1f2a33;
+      --muted: #61717f;
+      --border: #d6e0e7;
+      --accent: #0f7a8a;
+      --accent-strong: #0a5e6e;
+      --warning: #bf360c;
+      --danger: #b71c1c;
+      --ok: #156d2f;
+      --shadow: 0 20px 45px rgba(17, 45, 64, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-      color: #fff;
       min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      background: radial-gradient(circle at 10% 10%, #fff7e8 0%, transparent 40%),
+                  radial-gradient(circle at 90% 20%, #d9f0f2 0%, transparent 38%),
+                  linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+      font-family: "Avenir Next", "Segoe UI", "Trebuchet MS", sans-serif;
+      color: var(--text);
+      padding: 24px;
     }
-    .container {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 20px;
-      padding: 40px;
-      width: 500px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+
+    .shell {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+      grid-template-columns: 330px 1fr;
+      animation: fadeIn 350ms ease-out;
     }
-    h1 {
-      text-align: center;
-      font-size: 2rem;
-      margin-bottom: 10px;
-      background: linear-gradient(90deg, #00d2ff, #3a7bd5);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 18px;
     }
-    .subtitle {
-      text-align: center;
-      color: rgba(255,255,255,0.6);
-      margin-bottom: 30px;
+
+    .panel h1 {
+      font-size: 1.5rem;
+      margin-bottom: 6px;
+      letter-spacing: 0.02em;
+    }
+
+    .hint {
+      color: var(--muted);
       font-size: 0.9rem;
+      margin-bottom: 14px;
     }
-    .vote-buttons {
-      display: flex;
-      gap: 15px;
-      margin-bottom: 30px;
+
+    form {
+      display: grid;
+      gap: 10px;
     }
-    .vote-btn {
-      flex: 1;
-      padding: 20px;
-      border: 2px solid rgba(255,255,255,0.2);
-      border-radius: 15px;
-      background: rgba(255,255,255,0.05);
-      color: #fff;
-      font-size: 1.2rem;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-align: center;
-    }
-    .vote-btn:hover {
-      background: rgba(255,255,255,0.15);
-      border-color: #3a7bd5;
-      transform: translateY(-2px);
-    }
-    .vote-btn:active { transform: translateY(0); }
-    .vote-btn .emoji { font-size: 2.5rem; display: block; margin-bottom: 8px; }
-    .vote-btn .count {
+
+    label {
+      font-size: 0.88rem;
+      color: var(--muted);
+      margin-bottom: 4px;
       display: block;
-      font-size: 0.85rem;
-      color: rgba(255,255,255,0.5);
-      margin-top: 5px;
     }
-    .results {
-      background: rgba(0,0,0,0.2);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
+
+    input,
+    textarea,
+    button {
+      font: inherit;
     }
-    .results h3 { margin-bottom: 15px; font-size: 1rem; color: rgba(255,255,255,0.7); }
-    .bar-container { margin-bottom: 12px; }
-    .bar-label {
+
+    input,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 11px;
+      background: #fff;
+      color: var(--text);
+    }
+
+    textarea {
+      min-height: 82px;
+      resize: vertical;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(120deg, var(--accent), #2f9fb1);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(120deg, var(--accent-strong), #237a8a);
+    }
+
+    .btn-soft {
+      background: var(--panel-soft);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .btn-danger {
+      background: #fff3f2;
+      border: 1px solid #ffc7c1;
+      color: var(--danger);
+    }
+
+    .list {
+      margin-top: 14px;
+      display: grid;
+      gap: 8px;
+      max-height: 420px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .poll-item {
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 10px;
+      padding: 10px;
+      text-align: left;
+      cursor: pointer;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+
+    .poll-item:hover {
+      border-color: #aac8cf;
+      transform: translateY(-1px);
+    }
+
+    .poll-item.active {
+      border-color: var(--accent);
+      background: #f3fbfd;
+    }
+
+    .poll-q {
+      font-size: 0.94rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .poll-meta {
+      color: var(--muted);
+      font-size: 0.79rem;
+    }
+
+    .right-head {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 5px;
-      font-size: 0.9rem;
+      align-items: start;
+      gap: 12px;
+      margin-bottom: 12px;
     }
+
+    .badge {
+      font-size: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px 8px;
+      color: var(--muted);
+      background: #fff;
+      white-space: nowrap;
+    }
+
+    .badge.closed {
+      color: var(--warning);
+      border-color: #f2c1a6;
+      background: #fff6f0;
+    }
+
+    .options {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .option {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      background: #fff;
+    }
+
+    .option-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 0.92rem;
+      margin-bottom: 8px;
+    }
+
     .bar {
-      height: 8px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 4px;
+      height: 10px;
+      border-radius: 999px;
+      background: #ecf2f6;
       overflow: hidden;
+      margin-bottom: 8px;
     }
-    .bar-fill {
+
+    .bar > span {
+      display: block;
       height: 100%;
-      border-radius: 4px;
-      transition: width 0.5s ease;
+      border-radius: 999px;
+      background: linear-gradient(120deg, #53aab8, #0f7a8a);
+      transition: width 0.25s ease;
     }
-    .bar-fill.option-0 { background: linear-gradient(90deg, #00d2ff, #3a7bd5); }
-    .bar-fill.option-1 { background: linear-gradient(90deg, #f857a6, #ff5858); }
-    .total {
-      text-align: center;
-      color: rgba(255,255,255,0.5);
-      font-size: 0.85rem;
-      margin-top: 10px;
-    }
+
     .actions {
       display: flex;
       gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
     }
-    .action-btn {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 8px;
-      background: transparent;
-      color: rgba(255,255,255,0.6);
-      cursor: pointer;
-      font-size: 0.85rem;
-      transition: all 0.2s;
-    }
-    .action-btn:hover {
-      background: rgba(255,255,255,0.1);
-      color: #fff;
-    }
+
     .status {
-      text-align: center;
-      margin-top: 15px;
-      font-size: 0.8rem;
-      min-height: 20px;
+      min-height: 22px;
+      font-size: 0.88rem;
+      color: var(--muted);
     }
-    .status.success { color: #4caf50; }
-    .status.error { color: #ff5858; }
+
+    .status.ok { color: var(--ok); }
+    .status.error { color: var(--danger); }
+
+    .empty {
+      color: var(--muted);
+      border: 1px dashed var(--border);
+      padding: 16px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 900px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>&#9745; Vote Now</h1>
-    <p class="subtitle">Choose your favorite — powered by OpenTelemetry observability</p>
+  <main class="shell">
+    <section class="panel">
+      <h1>Quick Poll</h1>
+      <p class="hint">Create a poll in seconds. Poll reads are cached for faster refresh.</p>
 
-    <div class="vote-buttons" id="voteButtons"></div>
+      <form id="createPollForm">
+        <div>
+          <label for="question">Question</label>
+          <input id="question" name="question" maxlength="180" placeholder="What should we ship first?" required />
+        </div>
 
-    <div class="results" id="results">
-      <h3>Live Results</h3>
-      <div id="bars"></div>
-      <div class="total" id="total"></div>
-    </div>
+        <div>
+          <label for="options">Options (comma or new line separated)</label>
+          <textarea id="options" name="options" placeholder="Dark mode\nExport CSV\nBulk edit" required></textarea>
+        </div>
 
-    <div class="actions">
-      <button class="action-btn" onclick="resetVotes()">Reset Votes</button>
-      <button class="action-btn" onclick="loadResults()">Refresh</button>
-    </div>
+        <button class="btn btn-primary" type="submit">Create Poll</button>
+      </form>
 
-    <div class="status" id="status"></div>
-  </div>
+      <div class="list" id="pollList"></div>
+    </section>
+
+    <section class="panel">
+      <div id="pollDetail"></div>
+      <p id="status" class="status"></p>
+    </section>
+  </main>
 
   <script>
-    const EMOJIS = { cats: "🐱", dogs: "🐶", python: "🐍", javascript: "🟨", rust: "🦀" };
-    let options = [];
+    const state = {
+      polls: [],
+      activePollId: null,
+    };
+
+    const pollListEl = document.getElementById("pollList");
+    const pollDetailEl = document.getElementById("pollDetail");
+    const statusEl = document.getElementById("status");
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function parseOptions(text) {
+      return text
+        .split(/\n|,/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+
+    function showStatus(message, type = "") {
+      statusEl.textContent = message;
+      statusEl.className = `status ${type}`.trim();
+      if (!message) return;
+      window.clearTimeout(showStatus.timeout);
+      showStatus.timeout = window.setTimeout(() => {
+        statusEl.textContent = "";
+        statusEl.className = "status";
+      }, 3500);
+    }
+
+    function formatDate(value) {
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "";
+      return date.toLocaleString();
+    }
+
+    async function api(path, options = {}) {
+      const response = await fetch(path, {
+        headers: { "Content-Type": "application/json" },
+        ...options,
+      });
+
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload.error || "Request failed");
+      }
+      return payload;
+    }
+
+    function renderPollList() {
+      if (!state.polls.length) {
+        pollListEl.innerHTML = '<div class="empty">No polls yet.</div>';
+        return;
+      }
+
+      pollListEl.innerHTML = state.polls.map((poll) => {
+        const active = poll.id === state.activePollId ? "active" : "";
+        return `
+          <button class="poll-item ${active}" onclick="setActivePoll('${poll.id}')">
+            <div class="poll-q">${escapeHtml(poll.question)}</div>
+            <div class="poll-meta">${poll.totalVotes} votes • ${poll.closed ? "Closed" : "Open"}</div>
+          </button>
+        `;
+      }).join("");
+    }
+
+    function renderPollDetails(poll) {
+      if (!poll) {
+        pollDetailEl.innerHTML = '<div class="empty">Pick a poll from the left, or create one.</div>';
+        return;
+      }
+
+      const optionHtml = poll.options.map((option) => {
+        const pct = poll.totalVotes > 0 ? ((option.votes / poll.totalVotes) * 100).toFixed(1) : "0.0";
+        const disabled = poll.closed ? "disabled" : "";
+        return `
+          <div class="option">
+            <div class="option-head">
+              <strong>${escapeHtml(option.text)}</strong>
+              <span>${option.votes} votes (${pct}%)</span>
+            </div>
+            <div class="bar"><span style="width:${pct}%"></span></div>
+            <button class="btn btn-soft" ${disabled} onclick="vote('${poll.id}', '${option.id}')">Vote</button>
+          </div>
+        `;
+      }).join("");
+
+      pollDetailEl.innerHTML = `
+        <div class="right-head">
+          <div>
+            <h2>${escapeHtml(poll.question)}</h2>
+            <p class="hint">Created ${escapeHtml(formatDate(poll.createdAt))} • ${poll.totalVotes} total votes</p>
+          </div>
+          <span class="badge ${poll.closed ? "closed" : ""}">${poll.closed ? "Closed" : "Open"}</span>
+        </div>
+
+        <div class="options">${optionHtml}</div>
+
+        <div class="actions">
+          <button class="btn btn-soft" onclick="refreshActivePoll()">Refresh</button>
+          <button class="btn btn-soft" onclick="toggleClosed('${poll.id}', ${!poll.closed})">${poll.closed ? "Reopen" : "Close"} Poll</button>
+          <button class="btn btn-soft" onclick="resetPoll('${poll.id}')">Reset Votes</button>
+          <button class="btn btn-danger" onclick="deletePoll('${poll.id}')">Delete Poll</button>
+        </div>
+      `;
+    }
+
+    async function loadPolls() {
+      const data = await api("/api/polls");
+      state.polls = data.polls || [];
+
+      if (state.activePollId && !state.polls.find((poll) => poll.id === state.activePollId)) {
+        state.activePollId = null;
+      }
+
+      if (!state.activePollId && state.polls[0]) {
+        state.activePollId = state.polls[0].id;
+      }
+
+      renderPollList();
+      await refreshActivePoll(false);
+    }
+
+    async function refreshActivePoll(showOkMessage = false) {
+      if (!state.activePollId) {
+        renderPollDetails(null);
+        return;
+      }
+
+      const data = await api(`/api/polls/${state.activePollId}`);
+      const poll = data.poll;
+      state.polls = state.polls.map((item) => (item.id === poll.id ? poll : item));
+      renderPollList();
+      renderPollDetails(poll);
+
+      if (showOkMessage) {
+        showStatus("Poll refreshed", "ok");
+      }
+    }
+
+    async function setActivePoll(pollId) {
+      state.activePollId = pollId;
+      renderPollList();
+      try {
+        await refreshActivePoll();
+      } catch (err) {
+        showStatus(err.message, "error");
+      }
+    }
+
+    async function vote(pollId, optionId) {
+      try {
+        await api(`/api/polls/${pollId}/vote`, {
+          method: "POST",
+          body: JSON.stringify({ optionId }),
+        });
+        await refreshActivePoll();
+        showStatus("Vote recorded", "ok");
+      } catch (err) {
+        showStatus(err.message, "error");
+      }
+    }
+
+    async function toggleClosed(pollId, closed) {
+      try {
+        await api(`/api/polls/${pollId}/close`, {
+          method: "PATCH",
+          body: JSON.stringify({ closed }),
+        });
+        await refreshActivePoll();
+        showStatus(closed ? "Poll closed" : "Poll reopened", "ok");
+      } catch (err) {
+        showStatus(err.message, "error");
+      }
+    }
+
+    async function resetPoll(pollId) {
+      try {
+        await api(`/api/polls/${pollId}/reset`, { method: "POST" });
+        await refreshActivePoll();
+        showStatus("Votes reset", "ok");
+      } catch (err) {
+        showStatus(err.message, "error");
+      }
+    }
+
+    async function deletePoll(pollId) {
+      const ok = window.confirm("Delete this poll?");
+      if (!ok) return;
+
+      try {
+        await api(`/api/polls/${pollId}`, { method: "DELETE" });
+        showStatus("Poll deleted", "ok");
+        await loadPolls();
+      } catch (err) {
+        showStatus(err.message, "error");
+      }
+    }
+
+    document.getElementById("createPollForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const question = document.getElementById("question").value.trim();
+      const options = parseOptions(document.getElementById("options").value);
+
+      if (!question || options.length < 2) {
+        showStatus("Enter a question and at least 2 options", "error");
+        return;
+      }
+
+      try {
+        const data = await api("/api/polls", {
+          method: "POST",
+          body: JSON.stringify({ question, options }),
+        });
+
+        document.getElementById("createPollForm").reset();
+        showStatus("Poll created", "ok");
+        state.activePollId = data.poll.id;
+        await loadPolls();
+      } catch (err) {
+        showStatus(err.message, "error");
+      }
+    });
 
     async function init() {
       try {
-        const res = await fetch("/api/votes");
-        const data = await res.json();
-        options = data.options || Object.keys(data.votes);
-        renderButtons(data.votes);
-        renderBars(data.votes);
+        await loadPolls();
       } catch (err) {
-        showStatus("Failed to load votes", "error");
+        showStatus(err.message || "Failed to load polls", "error");
+        renderPollDetails(null);
       }
     }
 
-    function renderButtons(votes) {
-      const container = document.getElementById("voteButtons");
-      container.innerHTML = options.map((opt) => `
-        <button class="vote-btn" onclick="castVote('${opt}')">
-          <span class="emoji">${EMOJIS[opt] || "🗳️"}</span>
-          ${opt.charAt(0).toUpperCase() + opt.slice(1)}
-          <span class="count" id="count-${opt}">${votes[opt] || 0} votes</span>
-        </button>
-      `).join("");
-    }
-
-    function renderBars(votes) {
-      const total = Object.values(votes).reduce((a, b) => a + b, 0);
-      const barsEl = document.getElementById("bars");
-      barsEl.innerHTML = options.map((opt, i) => {
-        const count = votes[opt] || 0;
-        const pct = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
-        return `
-          <div class="bar-container">
-            <div class="bar-label">
-              <span>${opt.charAt(0).toUpperCase() + opt.slice(1)}</span>
-              <span>${count} (${pct}%)</span>
-            </div>
-            <div class="bar">
-              <div class="bar-fill option-${i}" style="width: ${pct}%"></div>
-            </div>
-          </div>`;
-      }).join("");
-      document.getElementById("total").textContent = `Total votes: ${total}`;
-    }
-
-    async function castVote(option) {
+    window.setInterval(async () => {
       try {
-        const res = await fetch("/api/vote", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ option }),
-        });
-        if (!res.ok) throw new Error("Vote failed");
-        showStatus(`Voted for ${option}!`, "success");
-        await loadResults();
-      } catch (err) {
-        showStatus("Failed to cast vote", "error");
+        await loadPolls();
+      } catch (_err) {
+        // Keep UI responsive even if polling fails briefly.
       }
-    }
-
-    async function loadResults() {
-      try {
-        const res = await fetch("/api/results");
-        const data = await res.json();
-        renderButtons(data.votes);
-        renderBars(data.votes);
-      } catch (err) {
-        showStatus("Failed to load results", "error");
-      }
-    }
-
-    async function resetVotes() {
-      try {
-        await fetch("/api/reset", { method: "POST" });
-        showStatus("Votes reset!", "success");
-        await loadResults();
-      } catch (err) {
-        showStatus("Failed to reset", "error");
-      }
-    }
-
-    function showStatus(msg, type) {
-      const el = document.getElementById("status");
-      el.textContent = msg;
-      el.className = `status ${type}`;
-      setTimeout(() => { el.textContent = ""; el.className = "status"; }, 3000);
-    }
+    }, 10000);
 
     init();
-    setInterval(loadResults, 5000);
   </script>
 </body>
 </html>

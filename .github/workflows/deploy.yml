@@ -2,19 +2,18 @@
 # deploy.yml — Continuous Deployment
 #
 # Triggered on push to main (or manual dispatch).
-# 1. Builds Docker images and pushes to ECR.
-# 2. Optionally runs Terraform apply for infrastructure changes.
-# 3. Runs Ansible playbooks to configure instances and deploy.
-# 4. Smoke-tests health endpoints.
+# 1. Reads Terraform outputs for dynamic IPs & ECR URLs (S3 backend required).
+# 2. Builds Docker images and pushes to ECR.
+# 3. Optionally runs Terraform apply for infrastructure changes.
+# 4. Runs Ansible playbooks to configure instances and deploy.
+# 5. Smoke-tests health endpoints.
 #
 # Required GitHub Secrets:
-#   AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY / AWS_REGION
-#   EC2_SSH_KEY           — PEM private key for SSH
-#   APP_INSTANCE_IP       — Public IP of the app EC2 instance
-#   APP_PRIVATE_IP        — Private IP of the app EC2 instance
-#   OBS_INSTANCE_IP       — Public IP of the observability EC2 instance
-#   OBS_PRIVATE_IP        — Private IP of the observability EC2 instance
-#   ECR_BACKEND_REPO / ECR_FRONTEND_REPO — Full ECR URI
+#   AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY — IAM credentials
+#   AWS_REGION            — AWS region (e.g. us-east-1)
+#
+# NOTE: Instance IPs, ECR URLs, and the SSH key are all read dynamically
+#       from Terraform remote state (S3 backend). No hardcoded secrets needed.
 ###############################################################################
 name: Deploy
 
@@ -41,83 +40,26 @@ on:
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
   IMAGE_TAG: ${{ github.sha }}
+  TF_WORKING_DIR: terraform
 
 jobs:
   # ---------------------------------------------------------------------------
-  #  1. Build & push Docker images to ECR
+  #  1. Read Terraform outputs (+ optional apply)
+  #     Provides dynamic IPs and ECR URLs to all downstream jobs
   # ---------------------------------------------------------------------------
-  build-and-push:
-    name: Build & Push Images to ECR
+  setup:
+    name: Terraform Outputs
     runs-on: ubuntu-latest
     outputs:
-      backend_image: ${{ steps.meta-backend.outputs.image }}
-      frontend_image: ${{ steps.meta-frontend.outputs.image }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Compute backend image URI
-        id: meta-backend
-        run: |
-          IMAGE="${{ secrets.ECR_BACKEND_REPO }}:${{ env.IMAGE_TAG }}"
-          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
-
-      - name: Build & push backend
-        uses: docker/build-push-action@v5
-        with:
-          context: ./app/backend
-          file: ./app/backend/Dockerfile
-          push: true
-          tags: |
-            ${{ steps.meta-backend.outputs.image }}
-            ${{ secrets.ECR_BACKEND_REPO }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Compute frontend image URI
-        id: meta-frontend
-        run: |
-          IMAGE="${{ secrets.ECR_FRONTEND_REPO }}:${{ env.IMAGE_TAG }}"
-          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
-
-      - name: Build & push frontend
-        uses: docker/build-push-action@v5
-        with:
-          context: ./app/frontend
-          file: ./app/frontend/Dockerfile
-          push: true
-          tags: |
-            ${{ steps.meta-frontend.outputs.image }}
-            ${{ secrets.ECR_FRONTEND_REPO }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  # ---------------------------------------------------------------------------
-  #  2. (Optional) Terraform apply
-  # ---------------------------------------------------------------------------
-  terraform:
-    name: Terraform Apply
-    runs-on: ubuntu-latest
-    needs: build-and-push
-    if: ${{ github.event.inputs.deploy_infra == 'true' }}
-
-    defaults:
-      run:
-        working-directory: terraform
+      app_public_ip: ${{ steps.outputs.outputs.app_public_ip }}
+      app_private_ip: ${{ steps.outputs.outputs.app_private_ip }}
+      obs_public_ip: ${{ steps.outputs.outputs.obs_public_ip }}
+      obs_private_ip: ${{ steps.outputs.outputs.obs_private_ip }}
+      ecr_registry: ${{ steps.outputs.outputs.ecr_registry }}
+      ecr_backend_repo: ${{ steps.outputs.outputs.ecr_backend_repo }}
+      ecr_frontend_repo: ${{ steps.outputs.outputs.ecr_frontend_repo }}
+      aws_region: ${{ steps.outputs.outputs.aws_region }}
+      ssh_private_key: ${{ steps.outputs.outputs.ssh_private_key }}
 
     steps:
       - name: Checkout
@@ -134,12 +76,100 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "~1.7"
+          terraform_wrapper: false    # Needed for raw output capture
 
-      - name: Terraform Init & Apply
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init -input=false
+
+      - name: Terraform Apply (if requested)
+        if: ${{ github.event.inputs.deploy_infra == 'true' }}
+        working-directory: ${{ env.TF_WORKING_DIR }}
         run: |
-          terraform init -input=false
           terraform plan -input=false -out=tfplan
           terraform apply -input=false tfplan
+
+      - name: Extract Terraform outputs
+        id: outputs
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          echo "app_public_ip=$(terraform output -raw app_instance_public_ip)" >> "$GITHUB_OUTPUT"
+          echo "app_private_ip=$(terraform output -raw app_instance_private_ip)" >> "$GITHUB_OUTPUT"
+          echo "obs_public_ip=$(terraform output -raw observability_instance_public_ip)" >> "$GITHUB_OUTPUT"
+          echo "obs_private_ip=$(terraform output -raw observability_instance_private_ip)" >> "$GITHUB_OUTPUT"
+          echo "ecr_registry=$(terraform output -raw ecr_registry)" >> "$GITHUB_OUTPUT"
+          echo "ecr_backend_repo=$(terraform output -raw ecr_backend_repository_url)" >> "$GITHUB_OUTPUT"
+          echo "ecr_frontend_repo=$(terraform output -raw ecr_frontend_repository_url)" >> "$GITHUB_OUTPUT"
+          echo "aws_region=$(terraform output -raw aws_region)" >> "$GITHUB_OUTPUT"
+
+          # SSH key — multiline value needs EOF delimiter
+          echo 'ssh_private_key<<KEYEOF' >> "$GITHUB_OUTPUT"
+          terraform output -raw ssh_private_key >> "$GITHUB_OUTPUT"
+          echo 'KEYEOF' >> "$GITHUB_OUTPUT"
+
+  # ---------------------------------------------------------------------------
+  #  2. Build & push Docker images to ECR
+  # ---------------------------------------------------------------------------
+  build-and-push:
+    name: Build & Push Images to ECR
+    runs-on: ubuntu-latest
+    needs: setup
+    outputs:
+      backend_image: ${{ steps.meta-backend.outputs.image }}
+      frontend_image: ${{ steps.meta-frontend.outputs.image }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ needs.setup.outputs.aws_region }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Compute backend image URI
+        id: meta-backend
+        run: |
+          IMAGE="${{ needs.setup.outputs.ecr_backend_repo }}:${{ env.IMAGE_TAG }}"
+          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
+
+      - name: Build & push backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./app/backend
+          file: ./app/backend/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.meta-backend.outputs.image }}
+            ${{ needs.setup.outputs.ecr_backend_repo }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Compute frontend image URI
+        id: meta-frontend
+        run: |
+          IMAGE="${{ needs.setup.outputs.ecr_frontend_repo }}:${{ env.IMAGE_TAG }}"
+          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
+
+      - name: Build & push frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./app/frontend
+          file: ./app/frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.meta-frontend.outputs.image }}
+            ${{ needs.setup.outputs.ecr_frontend_repo }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   # ---------------------------------------------------------------------------
   #  3. Deploy with Ansible
@@ -147,47 +177,54 @@ jobs:
   ansible-deploy:
     name: Ansible Deploy
     runs-on: ubuntu-latest
-    needs: build-and-push
-    if: always() && needs.build-and-push.result == 'success'
+    needs: [setup, build-and-push]
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Install Ansible
-        run: |
-          pip install ansible
+        run: pip install ansible
 
       - name: Write SSH key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/deploy_key.pem
+          echo '${{ needs.setup.outputs.ssh_private_key }}' > ~/.ssh/deploy_key.pem
           chmod 600 ~/.ssh/deploy_key.pem
 
       - name: Generate Ansible inventory
         run: |
-          cat > ansible/inventory/hosts.ini << EOF
+          mkdir -p ansible/inventory
+          cat > ansible/inventory/hosts.ini << 'INVENTORY'
           [app]
-          app-01 ansible_host=${{ secrets.APP_INSTANCE_IP }} private_ip=${{ secrets.APP_PRIVATE_IP }}
+          app-01 ansible_host=${{ needs.setup.outputs.app_public_ip }} private_ip=${{ needs.setup.outputs.app_private_ip }}
 
           [observability]
-          obs-01 ansible_host=${{ secrets.OBS_INSTANCE_IP }} private_ip=${{ secrets.OBS_PRIVATE_IP }}
+          obs-01 ansible_host=${{ needs.setup.outputs.obs_public_ip }} private_ip=${{ needs.setup.outputs.obs_private_ip }}
 
           [all:vars]
           ansible_user=ubuntu
           ansible_ssh_private_key_file=~/.ssh/deploy_key.pem
           ansible_ssh_common_args=-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
-          app_private_ip=${{ secrets.APP_PRIVATE_IP }}
-          observability_private_ip=${{ secrets.OBS_PRIVATE_IP }}
 
-          # ECR image overrides for production
+          # Cross-instance connectivity
+          app_private_ip=${{ needs.setup.outputs.app_private_ip }}
+          observability_private_ip=${{ needs.setup.outputs.obs_private_ip }}
+
+          # ECR configuration (from Terraform outputs)
+          ecr_registry=${{ needs.setup.outputs.ecr_registry }}
+          ecr_backend_repo=${{ needs.setup.outputs.ecr_backend_repo }}
+          ecr_frontend_repo=${{ needs.setup.outputs.ecr_frontend_repo }}
+          aws_region=${{ needs.setup.outputs.aws_region }}
+
+          # Docker images — commit-sha tagged, built this pipeline run
           app_backend_image=${{ needs.build-and-push.outputs.backend_image }}
           app_frontend_image=${{ needs.build-and-push.outputs.frontend_image }}
-          EOF
+          INVENTORY
 
       - name: Wait for instances
         run: |
-          for HOST in "${{ secrets.APP_INSTANCE_IP }}" "${{ secrets.OBS_INSTANCE_IP }}"; do
+          for HOST in "${{ needs.setup.outputs.app_public_ip }}" "${{ needs.setup.outputs.obs_public_ip }}"; do
             echo "Waiting for $HOST..."
             for i in $(seq 1 30); do
               if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
@@ -225,7 +262,7 @@ jobs:
   smoke-test:
     name: Smoke Test
     runs-on: ubuntu-latest
-    needs: ansible-deploy
+    needs: [setup, ansible-deploy]
     if: always() && needs.ansible-deploy.result == 'success'
 
     steps:
@@ -234,8 +271,8 @@ jobs:
 
       - name: Check health endpoints
         env:
-          APP_IP: ${{ secrets.APP_INSTANCE_IP }}
-          OBS_IP: ${{ secrets.OBS_INSTANCE_IP }}
+          APP_IP: ${{ needs.setup.outputs.app_public_ip }}
+          OBS_IP: ${{ needs.setup.outputs.obs_public_ip }}
         run: |
           FAILED=0
           check() {
