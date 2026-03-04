@@ -11,7 +11,7 @@ const logger = require("./logger");
 /* ------------------------------------------------------------------ */
 
 const PORT = parseInt(process.env.PORT, 10) || 3000;
-const BACKEND_URL = process.env.BACKEND_URL || "http://backend:3001";
+const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3001";
 
 /* ------------------------------------------------------------------ */
 /*  Prometheus Metrics                                                */
