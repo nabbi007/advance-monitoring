@@ -64,6 +64,7 @@
     project_src: "{{ app_project_dir }}"
     state: present
     pull: missing
+    wait: false
   register: _app_compose
 
 - name: Wait for Redis to be healthy

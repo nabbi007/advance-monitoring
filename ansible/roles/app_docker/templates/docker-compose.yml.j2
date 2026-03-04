@@ -36,7 +36,7 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3001/health"]
+      test: ["CMD-SHELL", "node -e \"const h=require('http');h.get('http://127.0.0.1:3001/health',r=>{process.exit(r.statusCode===200?0:1)}).on('error',()=>process.exit(1))\""]
       interval: 10s
       timeout: 5s
       start_period: 30s
@@ -57,10 +57,9 @@ services:
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://{{ observability_private_ip }}:4318/v1/traces"
       NODE_ENV: "{{ app_node_env }}"
     depends_on:
-      backend:
-        condition: service_healthy
+      - backend
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      test: ["CMD-SHELL", "node -e \"const h=require('http');h.get('http://127.0.0.1:3000/health',r=>{process.exit(r.statusCode===200?0:1)}).on('error',()=>process.exit(1))\""]
       interval: 10s
       timeout: 5s
       start_period: 30s
