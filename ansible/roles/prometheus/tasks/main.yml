@@ -55,6 +55,10 @@
     - prometheus
     - promtool
   notify: Restart prometheus
+  when: >
+    not prometheus_binary.stat.exists or
+    (prometheus_installed_version.stdout is defined and
+     prometheus_version not in (prometheus_installed_version.stdout | default('')))
 
 - name: Create prometheus system user
   ansible.builtin.user:

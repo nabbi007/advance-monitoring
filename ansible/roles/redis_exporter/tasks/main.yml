@@ -52,6 +52,10 @@
     mode: "0755"
     remote_src: true
   notify: Restart redis_exporter
+  when: >
+    not redis_exporter_binary.stat.exists or
+    (redis_exporter_installed_version.stdout is defined and
+     redis_exporter_version not in (redis_exporter_installed_version.stdout | default('')))
 
 - name: Create redis_exporter system user
   ansible.builtin.user:
