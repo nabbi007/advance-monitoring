@@ -98,6 +98,12 @@ jobs:
         id: outputs
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: |
+          # Check if state has outputs (fails gracefully on first run)
+          if ! terraform output -raw app_instance_public_ip &>/dev/null; then
+            echo "::error::No Terraform state found. Run workflow manually with 'deploy_infra=true' first."
+            exit 1
+          fi
+
           echo "app_public_ip=$(terraform output -raw app_instance_public_ip)" >> "$GITHUB_OUTPUT"
           echo "app_private_ip=$(terraform output -raw app_instance_private_ip)" >> "$GITHUB_OUTPUT"
           echo "obs_public_ip=$(terraform output -raw observability_instance_public_ip)" >> "$GITHUB_OUTPUT"
