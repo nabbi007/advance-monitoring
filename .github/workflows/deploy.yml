@@ -132,6 +132,9 @@ jobs:
     outputs:
       backend_image: ${{ steps.meta-backend.outputs.image }}
       frontend_image: ${{ steps.meta-frontend.outputs.image }}
+      ecr_registry: ${{ steps.ecr-login.outputs.registry }}
+      ecr_backend_repo: ${{ steps.meta-backend.outputs.repo }}
+      ecr_frontend_repo: ${{ steps.meta-frontend.outputs.repo }}
 
     steps:
       - name: Checkout
@@ -143,9 +146,10 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: ${{ needs.setup.outputs.aws_region }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
+        id: ecr-login
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Set up Docker Buildx
@@ -154,8 +158,12 @@ jobs:
       - name: Compute backend image URI
         id: meta-backend
         run: |
-          IMAGE="${{ needs.setup.outputs.ecr_backend_repo }}:${{ env.IMAGE_TAG }}"
+          REGISTRY="${{ steps.ecr-login.outputs.registry }}"
+          REPO="${REGISTRY}/voting-backend"
+          IMAGE="${REPO}:${{ env.IMAGE_TAG }}"
+          echo "repo=$REPO"   >> "$GITHUB_OUTPUT"
           echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
+          echo "Backend image: $IMAGE"
 
       - name: Build & push backend
         uses: docker/build-push-action@v5
@@ -165,15 +173,19 @@ jobs:
           push: true
           tags: |
             ${{ steps.meta-backend.outputs.image }}
-            ${{ needs.setup.outputs.ecr_backend_repo }}:latest
+            ${{ steps.meta-backend.outputs.repo }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Compute frontend image URI
         id: meta-frontend
         run: |
-          IMAGE="${{ needs.setup.outputs.ecr_frontend_repo }}:${{ env.IMAGE_TAG }}"
+          REGISTRY="${{ steps.ecr-login.outputs.registry }}"
+          REPO="${REGISTRY}/voting-frontend"
+          IMAGE="${REPO}:${{ env.IMAGE_TAG }}"
+          echo "repo=$REPO"   >> "$GITHUB_OUTPUT"
           echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
+          echo "Frontend image: $IMAGE"
 
       - name: Build & push frontend
         uses: docker/build-push-action@v5
@@ -183,7 +195,7 @@ jobs:
           push: true
           tags: |
             ${{ steps.meta-frontend.outputs.image }}
-            ${{ needs.setup.outputs.ecr_frontend_repo }}:latest
+            ${{ steps.meta-frontend.outputs.repo }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -227,11 +239,11 @@ jobs:
           app_private_ip=${{ needs.setup.outputs.app_private_ip }}
           observability_private_ip=${{ needs.setup.outputs.obs_private_ip }}
 
-          # ECR configuration (from Terraform outputs)
-          ecr_registry=${{ needs.setup.outputs.ecr_registry }}
-          ecr_backend_repo=${{ needs.setup.outputs.ecr_backend_repo }}
-          ecr_frontend_repo=${{ needs.setup.outputs.ecr_frontend_repo }}
-          aws_region=${{ needs.setup.outputs.aws_region }}
+          # ECR configuration (from build-and-push job)
+          ecr_registry=${{ needs.build-and-push.outputs.ecr_registry }}
+          ecr_backend_repo=${{ needs.build-and-push.outputs.ecr_backend_repo }}
+          ecr_frontend_repo=${{ needs.build-and-push.outputs.ecr_frontend_repo }}
+          aws_region=${{ env.AWS_REGION }}
 
           # Docker images — commit-sha tagged, built this pipeline run
           app_backend_image=${{ needs.build-and-push.outputs.backend_image }}
