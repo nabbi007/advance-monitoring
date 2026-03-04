@@ -86,11 +86,41 @@
     mode: "0644"
   notify: Restart grafana
 
+- name: Flush handlers (daemon-reload before first start)
+  ansible.builtin.meta: flush_handlers
+
 - name: Enable and start Grafana service
   ansible.builtin.systemd:
     name: grafana-server
     state: started
     enabled: true
+    daemon_reload: true
+
+- name: Pause briefly for Grafana to initialise
+  ansible.builtin.pause:
+    seconds: 5
+
+- name: Check Grafana service status
+  ansible.builtin.command: systemctl is-active grafana-server
+  register: _grafana_active
+  changed_when: false
+  failed_when: false
+
+- name: Collect Grafana journal logs (on failure)
+  ansible.builtin.command: journalctl -u grafana-server -n 60 --no-pager
+  register: _grafana_journal
+  changed_when: false
+  when: _grafana_active.stdout != 'active'
+
+- name: Show Grafana logs if service is not active
+  ansible.builtin.debug:
+    var: _grafana_journal.stdout_lines
+  when: _grafana_active.stdout != 'active'
+
+- name: Fail early if Grafana service is not active
+  ansible.builtin.fail:
+    msg: "grafana-server is {{ _grafana_active.stdout }}; see journal output above."
+  when: _grafana_active.stdout != 'active'
 
 - name: Wait for Grafana to be ready
   ansible.builtin.uri:
@@ -99,5 +129,5 @@
     status_code: 200
   register: _grafana_health
   until: _grafana_health.status == 200
-  retries: 30
-  delay: 5
+  retries: 20
+  delay: 10
