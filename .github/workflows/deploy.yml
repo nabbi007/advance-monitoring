@@ -159,7 +159,7 @@ jobs:
         id: meta-backend
         run: |
           REGISTRY="${{ steps.ecr-login.outputs.registry }}"
-          REPO="${REGISTRY}/voting-backend"
+          REPO="${REGISTRY}/advance-monitoring-voting-backend"
           IMAGE="${REPO}:${{ env.IMAGE_TAG }}"
           echo "repo=$REPO"   >> "$GITHUB_OUTPUT"
           echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
@@ -181,7 +181,7 @@ jobs:
         id: meta-frontend
         run: |
           REGISTRY="${{ steps.ecr-login.outputs.registry }}"
-          REPO="${REGISTRY}/voting-frontend"
+          REPO="${REGISTRY}/advance-monitoring-voting-frontend"
           IMAGE="${REPO}:${{ env.IMAGE_TAG }}"
           echo "repo=$REPO"   >> "$GITHUB_OUTPUT"
           echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
@@ -223,32 +223,29 @@ jobs:
       - name: Generate Ansible inventory
         run: |
           mkdir -p ansible/inventory
-          cat > ansible/inventory/hosts.ini << 'INVENTORY'
-          [app]
-          app-01 ansible_host=${{ needs.setup.outputs.app_public_ip }} private_ip=${{ needs.setup.outputs.app_private_ip }}
+          cat > ansible/inventory/hosts.ini << INVENTORY
+[app]
+app-01 ansible_host=${{ needs.setup.outputs.app_public_ip }} private_ip=${{ needs.setup.outputs.app_private_ip }}
 
-          [observability]
-          obs-01 ansible_host=${{ needs.setup.outputs.obs_public_ip }} private_ip=${{ needs.setup.outputs.obs_private_ip }}
+[observability]
+obs-01 ansible_host=${{ needs.setup.outputs.obs_public_ip }} private_ip=${{ needs.setup.outputs.obs_private_ip }}
 
-          [all:vars]
-          ansible_user=ubuntu
-          ansible_ssh_private_key_file=~/.ssh/deploy_key.pem
-          ansible_ssh_common_args=-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+[all:vars]
+ansible_user=ubuntu
+ansible_ssh_private_key_file=~/.ssh/deploy_key.pem
+ansible_ssh_common_args=-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
 
-          # Cross-instance connectivity
-          app_private_ip=${{ needs.setup.outputs.app_private_ip }}
-          observability_private_ip=${{ needs.setup.outputs.obs_private_ip }}
+app_private_ip=${{ needs.setup.outputs.app_private_ip }}
+observability_private_ip=${{ needs.setup.outputs.obs_private_ip }}
 
-          # ECR configuration (from build-and-push job)
-          ecr_registry=${{ needs.build-and-push.outputs.ecr_registry }}
-          ecr_backend_repo=${{ needs.build-and-push.outputs.ecr_backend_repo }}
-          ecr_frontend_repo=${{ needs.build-and-push.outputs.ecr_frontend_repo }}
-          aws_region=${{ env.AWS_REGION }}
+ecr_registry=${{ needs.build-and-push.outputs.ecr_registry }}
+ecr_backend_repo=${{ needs.build-and-push.outputs.ecr_backend_repo }}
+ecr_frontend_repo=${{ needs.build-and-push.outputs.ecr_frontend_repo }}
+aws_region=${{ env.AWS_REGION }}
 
-          # Docker images — commit-sha tagged, built this pipeline run
-          app_backend_image=${{ needs.build-and-push.outputs.backend_image }}
-          app_frontend_image=${{ needs.build-and-push.outputs.frontend_image }}
-          INVENTORY
+app_backend_image=${{ needs.build-and-push.outputs.backend_image }}
+app_frontend_image=${{ needs.build-and-push.outputs.frontend_image }}
+INVENTORY
 
       - name: Wait for instances
         run: |
