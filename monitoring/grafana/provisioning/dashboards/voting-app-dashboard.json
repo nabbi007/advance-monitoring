@@ -338,7 +338,7 @@
       "type": "timeseries",
       "targets": [
         {
-          "expr": "sum(rate(http_errors_total{job=\"voting-backend\"}[5m])) / sum(rate(http_requests_total{job=\"voting-backend\"}[5m]))",
+          "expr": "(sum(rate(http_errors_total{job=\"voting-backend\"}[5m])) / sum(rate(http_requests_total{job=\"voting-backend\"}[5m]))) or vector(0)",
           "legendFormat": "Error Rate",
           "refId": "A"
         }

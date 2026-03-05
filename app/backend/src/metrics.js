@@ -53,6 +53,15 @@ client.collectDefaultMetrics({
 });
 
 /* ------------------------------------------------------------------ */
+/*  Initialise counters so metrics exist from startup                  */
+/*  Without this, http_errors_total only appears after the first       */
+/*  error, making the Grafana error rate panel show "No data".         */
+/* ------------------------------------------------------------------ */
+
+httpErrorsTotal.labels({ method: "GET", route: "/health", status_code: "500" });
+httpRequestsTotal.labels({ method: "GET", route: "/health", status_code: "200" });
+
+/* ------------------------------------------------------------------ */
 /*  Express middleware to record RED metrics per request               */
 /* ------------------------------------------------------------------ */
 

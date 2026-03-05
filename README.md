@@ -43,32 +43,8 @@ The infrastructure runs on two AWS EC2 instances in `eu-west-1`:
 
 ## Architecture
 
-> **Full architecture diagram:** open [`docs/aws-architecture.drawio`](docs/aws-architecture.drawio) in [diagrams.net](https://app.diagrams.net) or the VS Code Draw.io extension for the complete AWS architecture with native icons, data-flow arrows, and legend.
+> **Full architecture diagram:** open [`docs/aws-architecture.drawio`](docs/aws-architecture.drawio) or the VS Code Draw.io extension for the complete AWS architecture with native icons, data-flow arrows, and legend.
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              AWS VPC (10.0.0.0/16)                          │
-│                         Public Subnet (10.0.1.0/24)                         │
-│                                                                             │
-│  ┌──────────────────────────┐      ┌──────────────────────────────────────┐ │
-│  │   app-01 (t3.medium)     │      │   obs-01 (t3.medium)                │ │
-│  │                          │      │                                      │ │
-│  │  Docker Compose:         │      │  Systemd:                            │ │
-│  │   ├─ frontend  (:3000)   │      │   ├─ Prometheus 2.51.2  (:9090)     │ │
-│  │   ├─ backend   (:3001)   │      │   ├─ Grafana 10.4.2     (:3000)     │ │
-│  │   └─ redis     (:6379)   │      │   └─ node_exporter      (:9100)     │ │
-│  │                          │      │                                      │ │
-│  │  Systemd:                │      │  Docker Compose:                     │ │
-│  │   ├─ node_exporter (:9100)│     │   └─ Jaeger 1.57        (:16686)    │ │
-│  │   └─ redis_exporter(:9121)│     │       OTLP HTTP          (:4318)    │ │
-│  │                          │      │                                      │ │
-│  └──────────┬───────────────┘      └──────────────────┬───────────────────┘ │
-│             │                                          │                     │
-│             │  ── OTLP traces (HTTP :4318) ──────────►│                     │
-│             │  ◄── Prometheus scrape (:3000,3001,      │                     │
-│             │       9100,9121) ──────────────────────  │                     │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
 
 ### Data Flow
 
