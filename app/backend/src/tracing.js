@@ -7,12 +7,11 @@ const { Resource } = require("@opentelemetry/resources");
 const { SemanticResourceAttributes } = require("@opentelemetry/semantic-conventions");
 const { BatchSpanProcessor } = require("@opentelemetry/sdk-trace-base");
 
-const JAEGER_ENDPOINT = process.env.OTEL_EXPORTER_OTLP_ENDPOINT || "http://jaeger:4318";
 const SERVICE_NAME = process.env.OTEL_SERVICE_NAME || "voting-backend";
+const OTLP_ENDPOINT = process.env.OTEL_EXPORTER_OTLP_ENDPOINT || "http://localhost:4318";
 
-const traceExporter = new OTLPTraceExporter({
-  url: JAEGER_ENDPOINT,
-});
+// Let the SDK read OTEL_EXPORTER_OTLP_ENDPOINT from env and auto-append /v1/traces
+const traceExporter = new OTLPTraceExporter();
 
 const sdk = new NodeSDK({
   resource: new Resource({
@@ -32,7 +31,7 @@ const sdk = new NodeSDK({
 });
 
 sdk.start();
-console.log(`[tracing] OpenTelemetry initialized for ${SERVICE_NAME} → ${JAEGER_ENDPOINT}`);
+console.log(`[tracing] OpenTelemetry initialized for ${SERVICE_NAME} → ${OTLP_ENDPOINT}/v1/traces`);
 
 process.on("SIGTERM", () => {
   sdk.shutdown()
