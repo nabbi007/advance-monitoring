@@ -7,7 +7,7 @@ const { Resource } = require("@opentelemetry/resources");
 const { SemanticResourceAttributes } = require("@opentelemetry/semantic-conventions");
 const { BatchSpanProcessor } = require("@opentelemetry/sdk-trace-base");
 
-const JAEGER_ENDPOINT = process.env.OTEL_EXPORTER_OTLP_ENDPOINT || "http://jaeger:4318/v1/traces";
+const JAEGER_ENDPOINT = process.env.OTEL_EXPORTER_OTLP_ENDPOINT || "http://jaeger:4318";
 const SERVICE_NAME = process.env.OTEL_SERVICE_NAME || "voting-frontend";
 
 const traceExporter = new OTLPTraceExporter({
