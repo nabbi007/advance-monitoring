@@ -43,6 +43,8 @@ The infrastructure runs on two AWS EC2 instances in `eu-west-1`:
 
 ## Architecture
 
+> **Full architecture diagram:** open [`docs/aws-architecture.drawio`](docs/aws-architecture.drawio) in [diagrams.net](https://app.diagrams.net) or the VS Code Draw.io extension for the complete AWS architecture with native icons, data-flow arrows, and legend.
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                              AWS VPC (10.0.0.0/16)                          │

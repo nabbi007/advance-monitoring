@@ -16,7 +16,7 @@ name: Deploy
 
 on:
   push:
-    branches: ["main"]
+    # branches: ["main"]
   workflow_dispatch:
     inputs:
       deploy_infra:

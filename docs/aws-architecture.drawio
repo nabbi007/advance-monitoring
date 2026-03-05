@@ -1,0 +1,340 @@
+<mxfile host="app.diagrams.net" modified="2026-03-05T00:00:00.000Z" agent="draw.io" type="device">
+    <diagram id="aws-arch" name="AWS Architecture — Advanced Monitoring &amp; Observability">
+        <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1920" pageHeight="1400" background="#FFFFFF" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- EXTERNAL: Users                                             -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <mxCell id="users" value="&lt;b&gt;Users&lt;/b&gt;" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#232F3E;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.users;" parent="1" vertex="1">
+                    <mxGeometry x="900" y="15" width="50" height="50" as="geometry"/>
+                </mxCell>
+
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- EXTERNAL: GitHub Actions (CI/CD)                            -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <mxCell id="gha" value="&lt;b style=&quot;font-size:12px&quot;&gt;GitHub Actions&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px;color:#ccc&quot;&gt;CI / CD Pipeline&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#24292e;fontColor=#ffffff;strokeColor=#57606a;fontSize=11;arcSize=10;verticalAlign=middle;" parent="1" vertex="1">
+                    <mxGeometry x="25" y="300" width="165" height="75" as="geometry"/>
+                </mxCell>
+                <mxCell id="gha_cd" value="&lt;b style=&quot;font-size:10px&quot;&gt;deploy.yml (CD)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;① setup — terraform apply&lt;br&gt;② build-and-push — ECR&lt;br&gt;③ ansible-deploy — configure&lt;br&gt;④ smoke-test — 8 health checks&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666;fontSize=9;verticalAlign=middle;dashed=1;dashPattern=6 4;fontColor=#333;" parent="1" vertex="1">
+                    <mxGeometry x="25" y="395" width="165" height="105" as="geometry"/>
+                </mxCell>
+                <mxCell id="gha_ci" value="&lt;b style=&quot;font-size:10px&quot;&gt;ci.yml (CI)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;lint · build-images&lt;br&gt;terraform-validate&lt;br&gt;validate-prometheus · ansible-lint&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666;fontSize=9;verticalAlign=middle;dashed=1;dashPattern=6 4;fontColor=#333;" parent="1" vertex="1">
+                    <mxGeometry x="25" y="515" width="165" height="90" as="geometry"/>
+                </mxCell>
+
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- AWS CLOUD                                                   -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <mxCell id="cloud" value="AWS Cloud" style="points=[[0,0],[0.25,0],[0.5,0],[0.75,0],[1,0],[1,0.25],[1,0.5],[1,0.75],[1,1],[0.75,1],[0.5,1],[0.25,1],[0,1],[0,0.75],[0,0.5],[0,0.25]];outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontSize=14;fontStyle=1;shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_aws_cloud_alt;strokeColor=#232F3E;fillColor=none;verticalAlign=top;align=left;spacingLeft=30;fontColor=#232F3E;dashed=0;" parent="1" vertex="1">
+                    <mxGeometry x="220" y="90" width="1660" height="1280" as="geometry"/>
+                </mxCell>
+
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- AWS SERVICES ROW (inside cloud, above region)               -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <mxCell id="s3" value="&lt;b&gt;S3 Bucket&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;advance-monitoring-tfstate&lt;br&gt;Terraform Remote State&lt;/font&gt;" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#3F8624;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.bucket;" parent="1" vertex="1">
+                    <mxGeometry x="300" y="128" width="48" height="48" as="geometry"/>
+                </mxCell>
+                <mxCell id="ecr_be" value="&lt;b&gt;ECR&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;voting-backend&lt;br&gt;Scan-on-Push · 10 Images&lt;/font&gt;" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#ED7100;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.ecr;" parent="1" vertex="1">
+                    <mxGeometry x="510" y="128" width="48" height="48" as="geometry"/>
+                </mxCell>
+                <mxCell id="ecr_fe" value="&lt;b&gt;ECR&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;voting-frontend&lt;br&gt;Scan-on-Push · 10 Images&lt;/font&gt;" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#ED7100;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.ecr;" parent="1" vertex="1">
+                    <mxGeometry x="700" y="128" width="48" height="48" as="geometry"/>
+                </mxCell>
+                <mxCell id="iam" value="&lt;b&gt;IAM Role&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;ECR ReadOnly&lt;br&gt;CloudWatch · SSM&lt;/font&gt;" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.role;" parent="1" vertex="1">
+                    <mxGeometry x="910" y="128" width="48" height="48" as="geometry"/>
+                </mxCell>
+                <mxCell id="tls" value="&lt;b&gt;Key Pair&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;RSA 4096-bit&lt;br&gt;Auto-Generated (TLS Provider)&lt;/font&gt;" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#DD344C;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=10;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.key_pair;" parent="1" vertex="1">
+                    <mxGeometry x="1090" y="128" width="48" height="48" as="geometry"/>
+                </mxCell>
+
+                <!-- Info boxes -->
+                <mxCell id="tf_info" value="&lt;b style=&quot;font-size:10px&quot;&gt;Terraform Modules (5)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#555&quot;&gt;vpc · app · observability · ec2-instance · ecr&lt;br&gt;S3 Backend · IMDSv2 Required&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#D45B07;fontSize=9;verticalAlign=middle;fontColor=#232F3E;dashed=1;dashPattern=8 4;" parent="1" vertex="1">
+                    <mxGeometry x="1440" y="110" width="255" height="52" as="geometry"/>
+                </mxCell>
+                <mxCell id="ans_info" value="&lt;b style=&quot;font-size:10px&quot;&gt;Ansible Roles (7)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#555&quot;&gt;common · app_docker · node_exporter · redis_exporter&lt;br&gt;prometheus · grafana · jaeger&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#D45B07;fontSize=9;verticalAlign=middle;fontColor=#232F3E;dashed=1;dashPattern=8 4;" parent="1" vertex="1">
+                    <mxGeometry x="1440" y="175" width="255" height="52" as="geometry"/>
+                </mxCell>
+
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- REGION                                                      -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <mxCell id="region" value="&lt;b&gt;Region : eu-west-1&lt;/b&gt;" style="points=[[0,0],[0.25,0],[0.5,0],[0.75,0],[1,0],[1,0.25],[1,0.5],[1,0.75],[1,1],[0.75,1],[0.5,1],[0.25,1],[0,1],[0,0.75],[0,0.5],[0,0.25]];outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontSize=13;fontStyle=0;shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_region;strokeColor=#00A4A6;fillColor=none;verticalAlign=top;align=left;spacingLeft=30;fontColor=#00A4A6;dashed=1;" parent="1" vertex="1">
+                    <mxGeometry x="240" y="245" width="1620" height="1100" as="geometry"/>
+                </mxCell>
+
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- VPC                                                         -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <mxCell id="vpc" value="&lt;b&gt;VPC : 10.0.0.0/16&lt;/b&gt;" style="points=[[0,0],[0.25,0],[0.5,0],[0.75,0],[1,0],[1,0.25],[1,0.5],[1,0.75],[1,1],[0.75,1],[0.5,1],[0.25,1],[0,1],[0,0.75],[0,0.5],[0,0.25]];outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontSize=13;fontStyle=0;shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_vpc2;strokeColor=#8C4FFF;fillColor=none;verticalAlign=top;align=left;spacingLeft=30;fontColor=#8C4FFF;dashed=0;" parent="1" vertex="1">
+                    <mxGeometry x="260" y="305" width="1580" height="1010" as="geometry"/>
+                </mxCell>
+
+                <!-- Internet Gateway -->
+                <mxCell id="igw" value="&lt;b&gt;IGW&lt;/b&gt;" style="outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#8C4FFF;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=9;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.internet_gateway;" parent="1" vertex="1">
+                    <mxGeometry x="272" y="332" width="40" height="40" as="geometry"/>
+                </mxCell>
+
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- PUBLIC SUBNET                                               -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <mxCell id="subnet" value="&lt;b&gt;Public Subnet : 10.0.1.0/24&lt;/b&gt;" style="points=[[0,0],[0.25,0],[0.5,0],[0.75,0],[1,0],[1,0.25],[1,0.5],[1,0.75],[1,1],[0.75,1],[0.5,1],[0.25,1],[0,1],[0,0.75],[0,0.5],[0,0.25]];outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontSize=12;fontStyle=0;shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_public_subnet;strokeColor=#7AA116;fillColor=none;verticalAlign=top;align=left;spacingLeft=30;fontColor=#248814;dashed=0;" parent="1" vertex="1">
+                    <mxGeometry x="305" y="370" width="1510" height="915" as="geometry"/>
+                </mxCell>
+
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- SECURITY GROUP: app-sg                                      -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <mxCell id="sg_app" value="&lt;b&gt;app-sg&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#DD3522&quot;&gt;Inbound: 22 · 3000 · 3001 · 9100 · 9121&lt;/font&gt;" style="points=[[0,0],[0.25,0],[0.5,0],[0.75,0],[1,0],[1,0.25],[1,0.5],[1,0.75],[1,1],[0.75,1],[0.5,1],[0.25,1],[0,1],[0,0.75],[0,0.5],[0,0.25]];outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontSize=11;fontStyle=0;shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_security_group;strokeColor=#DD3522;fillColor=none;verticalAlign=top;align=left;spacingLeft=30;fontColor=#DD3522;dashed=1;" parent="1" vertex="1">
+                    <mxGeometry x="325" y="415" width="600" height="720" as="geometry"/>
+                </mxCell>
+
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- EC2: app-01                                                 -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <mxCell id="ec2_app" value="&lt;b&gt;app-01&lt;/b&gt; · t3.medium · Ubuntu 22.04 · 30 GB gp3" style="points=[[0,0],[0.25,0],[0.5,0],[0.75,0],[1,0],[1,0.25],[1,0.5],[1,0.75],[1,1],[0.75,1],[0.5,1],[0.25,1],[0,1],[0,0.75],[0,0.5],[0,0.25]];outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontSize=10;fontStyle=0;shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_ec2_instance_contents;strokeColor=#ED7100;fillColor=none;verticalAlign=top;align=left;spacingLeft=30;fontColor=#ED7100;dashed=0;" parent="1" vertex="1">
+                    <mxGeometry x="340" y="465" width="570" height="650" as="geometry"/>
+                </mxCell>
+
+                <!-- Docker Compose Stack -->
+                <mxCell id="docker_app" value="&lt;b&gt;Docker Compose&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0F9FF;strokeColor=#0891B2;fontSize=10;fontStyle=0;dashed=1;dashPattern=8 4;verticalAlign=top;spacingTop=4;fontColor=#0891B2;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="355" y="525" width="340" height="380" as="geometry"/>
+                </mxCell>
+                <mxCell id="fe" value="&lt;b style=&quot;font-size:11px&quot;&gt;Frontend&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;:3000 · Node.js / Express&lt;br&gt;OpenTelemetry SDK · Winston Logger&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;verticalAlign=middle;" parent="1" vertex="1">
+                    <mxGeometry x="370" y="560" width="310" height="68" as="geometry"/>
+                </mxCell>
+                <mxCell id="be" value="&lt;b style=&quot;font-size:11px&quot;&gt;Backend&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;:3001 · Node.js / Express · prom-client&lt;br&gt;RED Metrics · OTel SDK · Winston Logger&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;verticalAlign=middle;" parent="1" vertex="1">
+                    <mxGeometry x="370" y="643" width="310" height="68" as="geometry"/>
+                </mxCell>
+                <mxCell id="redis" value="&lt;b style=&quot;font-size:11px&quot;&gt;Redis 7-alpine&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;:6379 · In-Memory Data Store&lt;br&gt;Persistent Volume · Atomic Lua Scripts&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;verticalAlign=middle;" parent="1" vertex="1">
+                    <mxGeometry x="370" y="726" width="310" height="68" as="geometry"/>
+                </mxCell>
+                <mxCell id="votenet" value="&lt;font style=&quot;font-size:8px;color:#0891B2&quot;&gt;voting-net (bridge)&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;fillColor=none;strokeColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="430" y="800" width="120" height="15" as="geometry"/>
+                </mxCell>
+
+                <!-- Exporters (native systemd) -->
+                <mxCell id="ne_app" value="&lt;b&gt;Node Exporter&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;v1.8.1 · :9100 · systemd&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;verticalAlign=middle;" parent="1" vertex="1">
+                    <mxGeometry x="715" y="545" width="175" height="48" as="geometry"/>
+                </mxCell>
+                <mxCell id="re_app" value="&lt;b&gt;Redis Exporter&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;v1.62.0 · :9121 · systemd&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;verticalAlign=middle;" parent="1" vertex="1">
+                    <mxGeometry x="715" y="612" width="175" height="48" as="geometry"/>
+                </mxCell>
+                <mxCell id="imds_app" value="&lt;font style=&quot;font-size:8px;color:#999&quot;&gt;IMDSv2 Required · Encrypted&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;fillColor=none;strokeColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="715" y="680" width="170" height="15" as="geometry"/>
+                </mxCell>
+
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- SECURITY GROUP: obs-sg                                      -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <mxCell id="sg_obs" value="&lt;b&gt;obs-sg&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#DD3522&quot;&gt;Inbound: 22 · 3000 · 4317 · 4318 · 9090 · 9100 · 16686&lt;/font&gt;" style="points=[[0,0],[0.25,0],[0.5,0],[0.75,0],[1,0],[1,0.25],[1,0.5],[1,0.75],[1,1],[0.75,1],[0.5,1],[0.25,1],[0,1],[0,0.75],[0,0.5],[0,0.25]];outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontSize=11;fontStyle=0;shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_security_group;strokeColor=#DD3522;fillColor=none;verticalAlign=top;align=left;spacingLeft=30;fontColor=#DD3522;dashed=1;" parent="1" vertex="1">
+                    <mxGeometry x="955" y="415" width="840" height="720" as="geometry"/>
+                </mxCell>
+
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- EC2: obs-01                                                 -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <mxCell id="ec2_obs" value="&lt;b&gt;obs-01&lt;/b&gt; · t3.medium · Ubuntu 22.04 · 30 GB gp3" style="points=[[0,0],[0.25,0],[0.5,0],[0.75,0],[1,0],[1,0.25],[1,0.5],[1,0.75],[1,1],[0.75,1],[0.5,1],[0.25,1],[0,1],[0,0.75],[0,0.5],[0,0.25]];outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontSize=10;fontStyle=0;shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_ec2_instance_contents;strokeColor=#ED7100;fillColor=none;verticalAlign=top;align=left;spacingLeft=30;fontColor=#ED7100;dashed=0;" parent="1" vertex="1">
+                    <mxGeometry x="970" y="465" width="810" height="650" as="geometry"/>
+                </mxCell>
+
+                <!-- Monitoring Services (native systemd) -->
+                <mxCell id="prom" value="&lt;b style=&quot;font-size:11px&quot;&gt;Prometheus 2.51.2&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;:9090 · systemd · Lifecycle API&lt;br&gt;6 Scrape Targets · 15s Interval · 15d Retention&lt;br&gt;&lt;/font&gt;&lt;font style=&quot;font-size:8px;color:#666&quot;&gt;8 Alert Rules (Error Rate · Latency · Up/Down · Resources)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;verticalAlign=middle;" parent="1" vertex="1">
+                    <mxGeometry x="985" y="525" width="365" height="85" as="geometry"/>
+                </mxCell>
+                <mxCell id="grafana" value="&lt;b style=&quot;font-size:11px&quot;&gt;Grafana 10.4.2&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;:3000 · systemd · Unified Alerting&lt;br&gt;2 Provisioned Datasources (Prometheus + Jaeger)&lt;br&gt;&lt;/font&gt;&lt;font style=&quot;font-size:8px;color:#666&quot;&gt;37-Panel Dashboard · 6 Sections · Service Health · Traces&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;verticalAlign=middle;" parent="1" vertex="1">
+                    <mxGeometry x="985" y="635" width="365" height="85" as="geometry"/>
+                </mxCell>
+
+                <!-- Docker Compose (Jaeger) -->
+                <mxCell id="docker_obs" value="&lt;b&gt;Docker Compose&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0F9FF;strokeColor=#0891B2;fontSize=9;fontStyle=0;dashed=1;dashPattern=8 4;verticalAlign=top;spacingTop=3;fontColor=#0891B2;align=center;" parent="1" vertex="1">
+                    <mxGeometry x="985" y="745" width="365" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="jaeger" value="&lt;b style=&quot;font-size:11px&quot;&gt;Jaeger 1.57 (all-in-one)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;:16686 (UI) · OTLP :4318 (HTTP) · :4317 (gRPC)&lt;br&gt;&lt;/font&gt;&lt;font style=&quot;font-size:8px;color:#666&quot;&gt;Memory Storage · 50K Max Traces · OTLP Collector&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;verticalAlign=middle;" parent="1" vertex="1">
+                    <mxGeometry x="1000" y="770" width="335" height="68" as="geometry"/>
+                </mxCell>
+
+                <!-- Node Exporter (obs) -->
+                <mxCell id="ne_obs" value="&lt;b&gt;Node Exporter&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;v1.8.1 · :9100 · systemd&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;verticalAlign=middle;" parent="1" vertex="1">
+                    <mxGeometry x="1400" y="545" width="175" height="48" as="geometry"/>
+                </mxCell>
+
+                <!-- Datasource UID labels -->
+                <mxCell id="uid_prom" value="&lt;font style=&quot;font-size:8px;color:#9673a6&quot;&gt;uid: prometheus&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;fillColor=none;strokeColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="1400" y="625" width="100" height="15" as="geometry"/>
+                </mxCell>
+                <mxCell id="uid_jaeger" value="&lt;font style=&quot;font-size:8px;color:#6c8ebf&quot;&gt;uid: jaeger&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;fillColor=none;strokeColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="1400" y="645" width="100" height="15" as="geometry"/>
+                </mxCell>
+                <mxCell id="imds_obs" value="&lt;font style=&quot;font-size:8px;color:#999&quot;&gt;IMDSv2 Required · Encrypted&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;fillColor=none;strokeColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="1400" y="680" width="170" height="15" as="geometry"/>
+                </mxCell>
+
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- CROSS-SG RULES (bottom of subnet)                           -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <mxCell id="crosssg" value="&lt;b style=&quot;font-size:10px;color:#DD3522&quot;&gt;Cross-SG Rules&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#DD3522&quot;&gt;App → Obs : OTLP 4317, 4318&lt;br&gt;Obs → App : Scrape 3000, 3001, 9100, 9121&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FDF2F8;strokeColor=#DD3522;fontSize=9;verticalAlign=middle;dashed=1;dashPattern=6 4;" parent="1" vertex="1">
+                    <mxGeometry x="575" y="1155" width="290" height="55" as="geometry"/>
+                </mxCell>
+
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- THREE PILLARS OF OBSERVABILITY                              -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <mxCell id="pillars_title" value="&lt;b style=&quot;font-size:10px;color:#232F3E&quot;&gt;Three Pillars of Observability&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;fillColor=none;strokeColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="1020" y="1150" width="250" height="18" as="geometry"/>
+                </mxCell>
+                <mxCell id="pillar_metrics" value="&lt;b&gt;METRICS&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;Prometheus scrapes&lt;br&gt;RED + System + Redis&lt;br&gt;prom-client in app&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;verticalAlign=middle;fontColor=#232F3E;" parent="1" vertex="1">
+                    <mxGeometry x="960" y="1172" width="155" height="62" as="geometry"/>
+                </mxCell>
+                <mxCell id="pillar_traces" value="&lt;b&gt;TRACES&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;OpenTelemetry SDK&lt;br&gt;OTLP → Jaeger&lt;br&gt;Auto-instrumented&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;verticalAlign=middle;fontColor=#232F3E;" parent="1" vertex="1">
+                    <mxGeometry x="1130" y="1172" width="155" height="62" as="geometry"/>
+                </mxCell>
+                <mxCell id="pillar_logs" value="&lt;b&gt;LOGS&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;Winston JSON&lt;br&gt;trace_id + span_id&lt;br&gt;Metric ↔ Trace ↔ Log&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;verticalAlign=middle;fontColor=#232F3E;" parent="1" vertex="1">
+                    <mxGeometry x="1300" y="1172" width="155" height="62" as="geometry"/>
+                </mxCell>
+
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- LEGEND                                                      -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <mxCell id="legend_title" value="&lt;b style=&quot;font-size:10px&quot;&gt;Legend&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=middle;fillColor=none;strokeColor=none;fontColor=#232F3E;" parent="1" vertex="1">
+                    <mxGeometry x="325" y="1155" width="60" height="18" as="geometry"/>
+                </mxCell>
+                <!-- Legend line 1: App Data -->
+                <mxCell id="leg1" value="" style="endArrow=blockThin;endFill=1;html=1;strokeWidth=2;strokeColor=#232F3E;" parent="1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="325" y="1185" as="sourcePoint"/>
+                        <mxPoint x="380" y="1185" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="leg1t" value="&lt;font style=&quot;font-size:9px&quot;&gt;Application Data Flow&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;fillColor=none;strokeColor=none;fontColor=#232F3E;" parent="1" vertex="1">
+                    <mxGeometry x="388" y="1178" width="130" height="15" as="geometry"/>
+                </mxCell>
+                <!-- Legend line 2: OTLP -->
+                <mxCell id="leg2" value="" style="endArrow=blockThin;endFill=1;html=1;strokeWidth=2;strokeColor=#0891B2;" parent="1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="325" y="1203" as="sourcePoint"/>
+                        <mxPoint x="380" y="1203" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="leg2t" value="&lt;font style=&quot;font-size:9px;color:#0891B2&quot;&gt;OTLP Trace Export&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;fillColor=none;strokeColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="388" y="1196" width="130" height="15" as="geometry"/>
+                </mxCell>
+                <!-- Legend line 3: Prometheus Scrape -->
+                <mxCell id="leg3" value="" style="endArrow=open;endFill=0;html=1;strokeWidth=1;strokeColor=#9673a6;dashed=1;dashPattern=4 4;" parent="1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="325" y="1221" as="sourcePoint"/>
+                        <mxPoint x="380" y="1221" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="leg3t" value="&lt;font style=&quot;font-size:9px;color:#9673a6&quot;&gt;Prometheus Scrape&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;fillColor=none;strokeColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="388" y="1214" width="130" height="15" as="geometry"/>
+                </mxCell>
+                <!-- Legend line 4: CI/CD -->
+                <mxCell id="leg4" value="" style="endArrow=blockThin;endFill=1;html=1;strokeWidth=1.5;strokeColor=#D45B07;dashed=1;dashPattern=10 5;" parent="1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="325" y="1239" as="sourcePoint"/>
+                        <mxPoint x="380" y="1239" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="leg4t" value="&lt;font style=&quot;font-size:9px;color:#D45B07&quot;&gt;CI/CD Operations&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;fillColor=none;strokeColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="388" y="1232" width="130" height="15" as="geometry"/>
+                </mxCell>
+
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- EDGES: User Traffic                                         -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <mxCell id="e_user_fe" value="HTTP :3000" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#232F3E;fontSize=9;fontColor=#232F3E;endArrow=blockThin;endFill=1;" parent="1" source="users" target="fe" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_user_graf" value="Grafana :3000" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#9673a6;fontSize=9;fontColor=#9673a6;endArrow=blockThin;endFill=1;dashed=1;dashPattern=8 8;" parent="1" source="users" target="grafana" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_user_jaeger" value="Jaeger :16686" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#6c8ebf;fontSize=9;fontColor=#6c8ebf;endArrow=blockThin;endFill=1;dashed=1;dashPattern=8 8;" parent="1" source="users" target="jaeger" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- EDGES: CI/CD Operations                                     -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <mxCell id="e_gha_s3" value="terraform apply" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#D45B07;fontSize=8;fontColor=#D45B07;endArrow=blockThin;endFill=1;dashed=1;dashPattern=10 5;exitX=1;exitY=0.25;exitDx=0;exitDy=0;" parent="1" source="gha" target="s3" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_gha_ecr1" value="docker push" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#D45B07;fontSize=8;fontColor=#D45B07;endArrow=blockThin;endFill=1;dashed=1;dashPattern=10 5;" parent="1" source="gha" target="ecr_be" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_gha_ecr2" value="docker push" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#D45B07;fontSize=8;fontColor=#D45B07;endArrow=blockThin;endFill=1;dashed=1;dashPattern=10 5;" parent="1" source="gha" target="ecr_fe" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_gha_app" value="ansible-playbook" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#D45B07;fontSize=8;fontColor=#D45B07;endArrow=blockThin;endFill=1;dashed=1;dashPattern=10 5;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0;entryDx=0;entryDy=0;" parent="1" source="gha" target="sg_app" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_gha_obs" value="ansible-playbook" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#D45B07;fontSize=8;fontColor=#D45B07;endArrow=blockThin;endFill=1;dashed=1;dashPattern=10 5;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="gha" target="sg_obs" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- EDGES: Docker Image Pull                                    -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <mxCell id="e_ecr_be" value="pull" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1;strokeColor=#ED7100;fontSize=8;fontColor=#ED7100;endArrow=blockThin;endFill=1;dashed=1;dashPattern=6 6;" parent="1" source="ecr_be" target="be" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_ecr_fe" value="pull" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1;strokeColor=#ED7100;fontSize=8;fontColor=#ED7100;endArrow=blockThin;endFill=1;dashed=1;dashPattern=6 6;" parent="1" source="ecr_fe" target="fe" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- EDGES: Internal App Data Flow                               -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <mxCell id="e_fe_be" value="proxy /api/*" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#232F3E;fontSize=8;fontColor=#232F3E;endArrow=blockThin;endFill=1;" parent="1" source="fe" target="be" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_be_redis" value="read / write" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#232F3E;fontSize=8;fontColor=#232F3E;endArrow=blockThin;endFill=1;" parent="1" source="be" target="redis" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- EDGES: OTLP Trace Export                                    -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <mxCell id="e_fe_otlp" value="OTLP :4318" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#0891B2;fontSize=8;fontColor=#0891B2;endArrow=blockThin;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" parent="1" source="fe" target="jaeger" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_be_otlp" value="OTLP :4318" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#0891B2;fontSize=8;fontColor=#0891B2;endArrow=blockThin;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;" parent="1" source="be" target="jaeger" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- EDGES: Prometheus Scrape                                    -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <mxCell id="e_prom_fe" value=":3000" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1;strokeColor=#9673a6;fontSize=8;fontColor=#9673a6;endArrow=open;endFill=0;dashed=1;dashPattern=4 4;exitX=0;exitY=0.2;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="prom" target="fe" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_prom_be" value=":3001" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1;strokeColor=#9673a6;fontSize=8;fontColor=#9673a6;endArrow=open;endFill=0;dashed=1;dashPattern=4 4;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="prom" target="be" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_prom_ne" value=":9100" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1;strokeColor=#9673a6;fontSize=8;fontColor=#9673a6;endArrow=open;endFill=0;dashed=1;dashPattern=4 4;exitX=0;exitY=0.8;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="prom" target="ne_app" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_prom_re" value=":9121" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1;strokeColor=#9673a6;fontSize=8;fontColor=#9673a6;endArrow=open;endFill=0;dashed=1;dashPattern=4 4;" parent="1" source="prom" target="re_app" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_prom_neobs" value=":9100" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1;strokeColor=#9673a6;fontSize=8;fontColor=#9673a6;endArrow=open;endFill=0;dashed=1;dashPattern=4 4;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="prom" target="ne_obs" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- EDGES: Grafana Queries                                      -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <mxCell id="e_graf_prom" value="query metrics" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#7E22CE;fontSize=8;fontColor=#7E22CE;endArrow=blockThin;endFill=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="grafana" target="prom" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_graf_jaeger" value="query traces" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#0891B2;fontSize=8;fontColor=#0891B2;endArrow=blockThin;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="grafana" target="jaeger" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
