@@ -3,6 +3,7 @@ apiVersion: 1
 datasources:
   - name: Prometheus
     type: prometheus
+    uid: prometheus
     access: proxy
     url: {{ grafana_prometheus_url }}
     isDefault: true
@@ -13,15 +14,17 @@ datasources:
 
   - name: Jaeger
     type: jaeger
+    uid: jaeger
     access: proxy
     url: {{ grafana_jaeger_url }}
     editable: true
     jsonData:
-      tracesToLogs:
+      tracesToLogsV2:
         datasourceUid: prometheus
-        tags: ["service"]
-        mappedTags:
+        tags:
           - key: "service.name"
             value: "service"
         filterByTraceID: true
         filterBySpanID: true
+      nodeGraph:
+        enabled: true

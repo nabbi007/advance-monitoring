@@ -37,11 +37,11 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
       "id": 200,
-      "title": "\ud83d\udd27 Backend — RED Metrics (Rate / Errors / Duration)",
+      "title": "Backend and Redis — RED Metrics",
       "type": "row"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -71,7 +71,7 @@
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "fixed", "fixedColor": "red" },
@@ -109,7 +109,7 @@
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -157,7 +157,7 @@
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -168,7 +168,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 9 },
       "id": 4,
       "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] }, "tooltip": { "mode": "multi" } },
-      "title": "Backend — Request Rate by Method & Route",
+      "title": "Backend — Requests by Method and Route",
       "type": "timeseries",
       "targets": [
         {
@@ -179,7 +179,7 @@
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -205,11 +205,11 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 17 },
       "id": 201,
-      "title": "\ud83d\uddc4\ufe0f Redis — Performance & Health",
+      "title": "Redis — Performance and Health",
       "type": "row"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "continuous-GrYlRd" },
@@ -244,7 +244,7 @@
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -266,7 +266,7 @@
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -277,7 +277,7 @@
       "gridPos": { "h": 8, "w": 8, "x": 16, "y": 18 },
       "id": 12,
       "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] }, "tooltip": { "mode": "multi" } },
-      "title": "Redis — Commands/sec",
+      "title": "Redis — Commands per Second",
       "type": "timeseries",
       "targets": [
         {
@@ -288,7 +288,7 @@
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -299,7 +299,7 @@
       "gridPos": { "h": 8, "w": 8, "x": 0, "y": 26 },
       "id": 13,
       "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] }, "tooltip": { "mode": "multi" } },
-      "title": "Redis — Operation Duration (P95 from Backend)",
+      "title": "Redis — Operation Duration P95 (from Backend)",
       "type": "timeseries",
       "targets": [
         {
@@ -310,7 +310,7 @@
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -321,7 +321,7 @@
       "gridPos": { "h": 8, "w": 8, "x": 8, "y": 26 },
       "id": 14,
       "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] }, "tooltip": { "mode": "multi" } },
-      "title": "Redis — Keys / Expires / Evictions",
+      "title": "Redis — Keys and Evictions",
       "type": "timeseries",
       "targets": [
         {
@@ -342,7 +342,7 @@
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -353,7 +353,7 @@
       "gridPos": { "h": 8, "w": 8, "x": 16, "y": 26 },
       "id": 15,
       "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] }, "tooltip": { "mode": "multi" } },
-      "title": "Redis — Hit Rate",
+      "title": "Redis — Cache Hit Rate",
       "type": "timeseries",
       "targets": [
         {
@@ -368,11 +368,11 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 34 },
       "id": 202,
-      "title": "\ud83d\udcca System Saturation — CPU / Memory / Disk / Network",
+      "title": "System Metrics — Saturation",
       "type": "row"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "continuous-GrYlRd" },
@@ -404,7 +404,7 @@
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "continuous-GrYlRd" },
@@ -436,7 +436,7 @@
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "continuous-GrYlRd" },
@@ -467,7 +467,7 @@
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -494,7 +494,7 @@
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "continuous-GrYlRd" },
@@ -534,7 +534,7 @@
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -566,7 +566,7 @@
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -597,11 +597,11 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 51 },
       "id": 203,
-      "title": "\ud83d\udcc8 App Metrics — Votes, Frontend & Process",
+      "title": "App Metrics — Votes, Frontend and Process",
       "type": "row"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -623,7 +623,7 @@
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -645,7 +645,7 @@
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -673,7 +673,7 @@
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -705,7 +705,7 @@
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -732,7 +732,7 @@
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -763,52 +763,47 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 68 },
       "id": 204,
-      "title": "\ud83d\udd0d Distributed Tracing — Jaeger",
+      "title": "Distributed Tracing — Jaeger",
       "type": "row"
     },
     {
-      "datasource": { "type": "jaeger", "uid": "${DS_JAEGER}" },
+      "datasource": { "type": "jaeger", "uid": "jaeger" },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
       "gridPos": { "h": 10, "w": 24, "x": 0, "y": 69 },
       "id": 40,
-      "options": {
-        "query": "voting-backend"
-      },
+      "targets": [
+        {
+          "datasource": { "type": "jaeger", "uid": "jaeger" },
+          "queryType": "search",
+          "service": "voting-backend",
+          "refId": "A"
+        }
+      ],
       "title": "Traces — Voting Backend",
       "type": "traces"
     },
     {
-      "datasource": { "type": "jaeger", "uid": "${DS_JAEGER}" },
+      "datasource": { "type": "jaeger", "uid": "jaeger" },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
       "gridPos": { "h": 10, "w": 24, "x": 0, "y": 79 },
       "id": 41,
-      "options": {
-        "query": "voting-frontend"
-      },
+      "targets": [
+        {
+          "datasource": { "type": "jaeger", "uid": "jaeger" },
+          "queryType": "search",
+          "service": "voting-frontend",
+          "refId": "A"
+        }
+      ],
       "title": "Traces — Voting Frontend",
       "type": "traces"
     }
   ],
   "schemaVersion": 39,
   "tags": ["voting-app", "observability", "RED-metrics", "saturation", "jaeger"],
-  "templating": {
-    "list": [
-      {
-        "current": { "selected": false, "text": "Prometheus", "value": "prometheus" },
-        "hide": 2,
-        "name": "DS_PROMETHEUS",
-        "type": "datasource",
-        "query": "prometheus"
-      },
-      {
-        "current": { "selected": false, "text": "Jaeger", "value": "jaeger" },
-        "hide": 2,
-        "name": "DS_JAEGER",
-        "type": "datasource",
-        "query": "jaeger"
-      }
-    ]
-  },
+  "templating": { "list": [] },
   "time": { "from": "now-1h", "to": "now" },
   "title": "Voting App — Observability Dashboard",
   "uid": "voting-app-observability",
-  "version": 2
+  "version": 3
 }
